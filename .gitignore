@@ -10,3 +10,4 @@ kayoutf/data-raw/sources/*.rds
 
 # Rust build artifacts
 tools/classify/target/
+tools/scrape/target/
