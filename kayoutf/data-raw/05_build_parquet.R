@@ -47,6 +47,9 @@ cat("  - TF02:", nrow(tf02_cards), "cards\n")
 source("data-raw/03_cards_tf03.R")
 cat("  - TF03:", nrow(tf03_cards), "cards\n")
 
+source("data-raw/03_cards_tfkb01.R")
+cat("  - TFKB01:", nrow(tfkb01_cards), "cards\n")
+
 source("data-raw/03_cards_tfh01.R")
 cat("  - TFH01:", nrow(tfh01_cards), "cards\n")
 
@@ -61,7 +64,7 @@ cat("\nStep 3: Combining all card data...\n")
 
 all_cards <- bind_rows(
   tfeu01_cards, tf01_cards, tf02_cards, tf03_cards,
-  tfh01_cards, tfo01_cards, tf40y_cards
+  tfkb01_cards, tfh01_cards, tfo01_cards, tf40y_cards
 )
 cat("  - Total cards:", nrow(all_cards), "\n")
 

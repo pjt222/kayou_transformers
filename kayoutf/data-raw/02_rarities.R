@@ -119,10 +119,20 @@ tf40y_rarities <- tribble(
 )
 tf40y_rarities$set_code <- "TF40Y"
 
+# --- TFKB01 rarities (from physical card denomination inspection) ---
+# Parallel subset included in TF02 boxes; likely incomplete
+tfkb01_rarities <- tribble(
+  ~rarity_code, ~rarity_name_en, ~rarity_name_zh, ~card_count, ~sort_order, ~notes,
+  "AR", "Augmented Reality", NA_character_, 8L, 1L, "Confirmed from card denominator /008",
+  "HR", "Holographic Rare",  NA_character_, 20L, 2L, "Confirmed from card denominator",
+  "SR", "Super Rare",        NA_character_, 20L, 3L, "Confirmed from card denominator"
+)
+tfkb01_rarities$set_code <- "TFKB01"
+
 # Combine all
 rarities <- dplyr::bind_rows(
   tfeu01_rarities, tf01_rarities, tf02_rarities, tf03_rarities,
-  tfh01_rarities, tfo01_rarities, tf40y_rarities
+  tfkb01_rarities, tfh01_rarities, tfo01_rarities, tf40y_rarities
 )
 
 # Generate rarity_id

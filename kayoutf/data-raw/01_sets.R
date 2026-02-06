@@ -24,6 +24,9 @@ sets <- tribble(
   "TF40Y", "40th Anniversary", "变形金刚40周年纪念",
   "40th Anniversary Special", 2024L, "40th Anniversary", 150L,
 
+  "TFKB01", "Cybertron Collection Series B", NA_character_,
+  "Cybertron Leader Edition", 2023L, "G1 / Movie", 48L,
+
   "TFEU01", "Energon Universe", "能量临界典藏卡",
   "Energon Universe", 2024L, "Energon Universe Comics", 254L
 )

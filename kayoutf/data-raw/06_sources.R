@@ -68,7 +68,14 @@ sources <- tribble(
   "TF40Y-time-weekly", "TF40Y", "website",
   "https://www.time-weekly.com/post/305612", NA_character_,
   "Time Weekly article on 40th Anniversary release", as.Date("2024-12-01"), "secondary",
-  "Chinese-language source with product details and pricing"
+  "Chinese-language source with product details and pricing",
+
+# --- TFKB01: Cybertron Collection Series B ---
+
+  "TFKB01-physical-cards", "TFKB01", "card_scan", NA_character_, NA_character_,
+  "Physical card inspection for TFKB01 rarity denominators",
+  as.Date("2025-02-06"), "secondary",
+  "Confirmed AR/008, SR/020, HR/020 from physical cards"
 )
 
 saveRDS(sources, "data-raw/sources/sources.rds")

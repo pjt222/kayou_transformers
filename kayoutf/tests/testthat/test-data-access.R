@@ -4,7 +4,7 @@ test_that("kt_sets returns tibble with expected columns", {
   expect_true("set_code" %in% names(result))
   expect_true("set_name_en" %in% names(result))
   expect_true("release_year" %in% names(result))
-  expect_equal(nrow(result), 7)
+  expect_equal(nrow(result), 8)
 })
 
 test_that("kt_cards returns tibble with expected columns", {

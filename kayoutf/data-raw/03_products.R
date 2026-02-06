@@ -18,9 +18,13 @@ products <- tribble(
   "TF01-standard", "TF01", "Standard Box", "领袖版",
   5L, 18L, 124L, NA_character_,
 
-  # TF02 - Confirmed red box, same format as TF01
+  # TF02 - Confirmed red box, same format as TF01 (also contains TFKB01 parallel subset)
   "TF02-standard", "TF02", "Standard Box", "领袖版",
   5L, 18L, 124L, NA_character_,
+
+  # TFKB01 - Parallel subset included in TF02 boxes
+  "TFKB01-in-TF02", "TFKB01", "Included in TF02 Standard Box", "领袖版",
+  5L, 18L, 48L, NA_character_,
 
   # TF03 - Same format
   "TF03-standard", "TF03", "Standard Box", "领袖版",
