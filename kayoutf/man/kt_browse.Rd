@@ -4,7 +4,12 @@
 \alias{kt_browse}
 \title{Browse the card database in a Shiny app}
 \usage{
-kt_browse()
+kt_browse(repo_root = NULL)
+}
+\arguments{
+\item{repo_root}{Optional path to the kayou_transformers repository root.
+When provided, the Gallery tab can display scraped card images. If \code{NULL}
+(the default), the app will attempt to auto-detect the repo root.}
 }
 \description{
 Launches an interactive Shiny application for browsing and filtering
@@ -14,5 +19,6 @@ cards, sets, rarities, characters, and products. Requires the \code{shiny},
 \examples{
 \dontrun{
 kt_browse()
+kt_browse(repo_root = "/path/to/kayou_transformers")
 }
 }
