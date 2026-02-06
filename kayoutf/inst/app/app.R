@@ -88,6 +88,7 @@ dark_dt_css <- tags$style(HTML("
   }
   /* Gallery card styling */
   .gallery-card {
+    position: relative;
     background-color: #303030;
     border: 1px solid #444;
     border-radius: 8px;
@@ -130,6 +131,67 @@ dark_dt_css <- tags$style(HTML("
     max-height: 80vh;
     display: block;
     margin: 0 auto;
+  }
+  /* Feedback overlay icon on gallery cards */
+  .feedback-overlay {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 1.2rem;
+    line-height: 1;
+    z-index: 2;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  }
+  .feedback-overlay.correct { color: #2ecc40; }
+  .feedback-overlay.incorrect { color: #e74c3c; }
+  /* Feedback icon buttons */
+  .feedback-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 0.85rem;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .feedback-btn:hover { opacity: 1; }
+  .feedback-btn.active { opacity: 1; }
+  .feedback-btn.correct { color: #2ecc40; }
+  .feedback-btn.incorrect { color: #e74c3c; }
+  /* Modal feedback section */
+  .modal-feedback-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+  }
+  .modal-feedback-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    cursor: pointer;
+    font-size: 0.85rem;
+    background: #303030;
+    color: #adb5bd;
+    transition: all 0.15s;
+  }
+  .modal-feedback-btn:hover { border-color: #888; color: #fff; }
+  .modal-feedback-btn.active-correct {
+    background: rgba(46, 204, 64, 0.2);
+    border-color: #2ecc40;
+    color: #2ecc40;
+  }
+  .modal-feedback-btn.active-incorrect {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: #e74c3c;
+    color: #e74c3c;
+  }
+  .feedback-status-label {
+    font-size: 0.8rem;
+    color: #adb5bd;
+    margin-left: auto;
   }
 "))
 
@@ -182,6 +244,10 @@ build_gallery_ui <- function() {
                 placeholder = "e.g. Optimus"),
       selectInput("gallery_confidence", "Confidence",
                   choices = c("All" = "", "high", "medium", "low"),
+                  selected = ""),
+      selectInput("gallery_review", "Review status",
+                  choices = c("All" = "", "Unreviewed" = "unreviewed",
+                              "Correct" = "correct", "Incorrect" = "incorrect"),
                   selected = ""),
       selectInput("gallery_page_size", "Per page",
                   choices = c("12", "24", "48"),
@@ -438,6 +504,21 @@ server <- function(input, output, session) {
 
     gallery_current_page <- reactiveVal(1)
 
+    # Feedback reactive: keyed by "filename|current_directory" -> is_correct
+    initial_feedback <- load_feedback_data(repo_root)
+    # De-duplicate: keep latest row per image (last row wins)
+    if (nrow(initial_feedback) > 0) {
+      initial_feedback$key <- paste0(initial_feedback$filename, "|",
+                                      initial_feedback$current_directory)
+      initial_feedback <- initial_feedback[!duplicated(initial_feedback$key,
+                                                        fromLast = TRUE), ]
+      feedback_init <- stats::setNames(initial_feedback$is_correct,
+                                        initial_feedback$key)
+    } else {
+      feedback_init <- stats::setNames(logical(0), character(0))
+    }
+    feedback_rv <- reactiveVal(feedback_init)
+
     # Cascading rarity filter based on gallery set
     observeEvent(input$gallery_set, {
       if (input$gallery_set == "") {
@@ -464,6 +545,7 @@ server <- function(input, output, session) {
       updateSelectInput(session, "gallery_rarity", selected = "")
       updateTextInput(session, "gallery_character", value = "")
       updateSelectInput(session, "gallery_confidence", selected = "")
+      updateSelectInput(session, "gallery_review", selected = "")
       updateSelectInput(session, "gallery_page_size", selected = "24")
     })
 
@@ -495,6 +577,22 @@ server <- function(input, output, session) {
                        data$confidence == input$gallery_confidence, ]
       }
 
+      # Review status filter
+      if (input$gallery_review != "") {
+        fb <- feedback_rv()
+        data$fb_key <- paste0(data$filename, "|", data$current_directory)
+        if (input$gallery_review == "unreviewed") {
+          data <- data[!(data$fb_key %in% names(fb)), ]
+        } else if (input$gallery_review == "correct") {
+          correct_keys <- names(fb)[fb == TRUE]
+          data <- data[data$fb_key %in% correct_keys, ]
+        } else if (input$gallery_review == "incorrect") {
+          incorrect_keys <- names(fb)[fb == FALSE]
+          data <- data[data$fb_key %in% incorrect_keys, ]
+        }
+        data$fb_key <- NULL
+      }
+
       data
     })
 
@@ -502,7 +600,7 @@ server <- function(input, output, session) {
     observeEvent(list(
       input$gallery_set, input$gallery_type, input$gallery_rarity,
       input$gallery_character, input$gallery_confidence,
-      input$gallery_page_size
+      input$gallery_review, input$gallery_page_size
     ), {
       gallery_current_page(1)
     })
@@ -541,10 +639,13 @@ server <- function(input, output, session) {
         ))
       }
 
+      fb <- feedback_rv()
+
       card_elements <- lapply(seq_len(nrow(data)), function(i) {
         row <- data[i, ]
         img_url <- paste0("gallery-", row$current_directory, "/",
                           row$filename)
+        fb_key <- paste0(row$filename, "|", row$current_directory)
         is_card_badge <- if (isTRUE(row$is_card)) {
           tags$span(class = "badge bg-success gallery-badge", "Card")
         } else {
@@ -570,17 +671,58 @@ server <- function(input, output, session) {
           tags$p(class = "card-text", row$character_name)
         }
 
-        # Unique id for click handler
-        card_id <- paste0("gallery_img_", i)
+        # Feedback overlay icon
+        feedback_icon <- NULL
+        has_feedback <- fb_key %in% names(fb)
+        if (has_feedback) {
+          if (isTRUE(fb[[fb_key]])) {
+            feedback_icon <- tags$span(class = "feedback-overlay correct",
+                                       HTML("&#10003;"))
+          } else {
+            feedback_icon <- tags$span(class = "feedback-overlay incorrect",
+                                       HTML("&#10007;"))
+          }
+        }
+
+        # Feedback buttons (thumbs-up / thumbs-down)
+        up_active <- if (has_feedback && isTRUE(fb[[fb_key]])) " active" else ""
+        down_active <- if (has_feedback && !isTRUE(fb[[fb_key]])) " active" else ""
+
+        # Escape single quotes in filename for JS
+        safe_filename <- gsub("'", "\\\\'", row$filename)
+        safe_dir <- gsub("'", "\\\\'", row$current_directory)
+
+        feedback_buttons <- div(
+          style = "display:inline-flex; gap:2px; margin-top:4px;",
+          tags$button(
+            class = paste0("feedback-btn correct", up_active),
+            title = "Correct",
+            onclick = sprintf(
+              "event.stopPropagation(); Shiny.setInputValue('gallery_feedback', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
+              safe_filename, safe_dir
+            ),
+            HTML("&#9650;")
+          ),
+          tags$button(
+            class = paste0("feedback-btn incorrect", down_active),
+            title = "Incorrect",
+            onclick = sprintf(
+              "event.stopPropagation(); Shiny.setInputValue('gallery_feedback', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
+              safe_filename, safe_dir
+            ),
+            HTML("&#9660;")
+          )
+        )
 
         div(
           class = "col",
           div(
             class = "gallery-card",
             onclick = sprintf(
-              "Shiny.setInputValue('gallery_click', '%s', {priority:'event'})",
-              img_url
+              "Shiny.setInputValue('gallery_click', {url:'%s', filename:'%s', dir:'%s'}, {priority:'event'})",
+              img_url, safe_filename, safe_dir
             ),
+            feedback_icon,
             tags$img(
               src = img_url,
               loading = "lazy",
@@ -594,7 +736,8 @@ server <- function(input, output, session) {
                 class = "card-text",
                 style = "font-size:0.65rem; color:#888;",
                 row$filename
-              )
+              ),
+              feedback_buttons
             )
           )
         )
@@ -708,18 +851,109 @@ server <- function(input, output, session) {
       do.call(tagList, buttons)
     })
 
-    # Click-to-enlarge modal
+    # Click-to-enlarge modal with feedback
     observeEvent(input$gallery_click, {
-      img_url <- input$gallery_click
+      click_data <- input$gallery_click
+      img_url <- click_data$url
+      click_filename <- click_data$filename
+      click_dir <- click_data$dir
+      fb_key <- paste0(click_filename, "|", click_dir)
+
+      # Look up classification details
+      match_row <- gallery_data[gallery_data$filename == click_filename &
+                                  gallery_data$current_directory == click_dir, ]
+
+      detail_tags <- if (nrow(match_row) > 0) {
+        r <- match_row[1, ]
+        tagList(
+          tags$div(
+            style = "margin-top:10px; font-size:0.85rem; color:#adb5bd;",
+            tags$span(tags$strong("Set: "), r$current_directory, " | "),
+            if (!is.na(r$rarity_code) && nzchar(r$rarity_code))
+              tags$span(tags$strong("Rarity: "), r$rarity_code, " | "),
+            if (!is.na(r$character_name) && nzchar(r$character_name))
+              tags$span(tags$strong("Character: "), r$character_name, " | "),
+            if (!is.na(r$confidence) && nzchar(r$confidence))
+              tags$span(tags$strong("Confidence: "), r$confidence)
+          )
+        )
+      }
+
+      # Current feedback status
+      fb <- feedback_rv()
+      has_fb <- fb_key %in% names(fb)
+      status_label <- if (has_fb) {
+        if (isTRUE(fb[[fb_key]])) {
+          tags$span(class = "feedback-status-label",
+                    HTML("&#10003; Marked correct"))
+        } else {
+          tags$span(class = "feedback-status-label",
+                    HTML("&#10007; Marked incorrect"))
+        }
+      }
+
+      correct_class <- if (has_fb && isTRUE(fb[[fb_key]])) " active-correct" else ""
+      incorrect_class <- if (has_fb && !isTRUE(fb[[fb_key]])) " active-incorrect" else ""
+
+      safe_fn <- gsub("'", "\\\\'", click_filename)
+      safe_d <- gsub("'", "\\\\'", click_dir)
+
+      feedback_ui <- div(
+        class = "modal-feedback-section",
+        tags$button(
+          class = paste0("modal-feedback-btn", correct_class),
+          onclick = sprintf(
+            "Shiny.setInputValue('modal_feedback', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
+            safe_fn, safe_d
+          ),
+          HTML("&#10003; Correct")
+        ),
+        tags$button(
+          class = paste0("modal-feedback-btn", incorrect_class),
+          onclick = sprintf(
+            "Shiny.setInputValue('modal_feedback', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
+            safe_fn, safe_d
+          ),
+          HTML("&#10007; Incorrect")
+        ),
+        status_label
+      )
+
       showModal(modalDialog(
         tags$img(
           src = img_url,
           class = "modal-gallery-img"
         ),
+        detail_tags,
+        feedback_ui,
         size = "l",
         easyClose = TRUE,
         footer = modalButton("Close")
       ))
+    })
+
+    # Feedback handler for gallery card buttons
+    observeEvent(input$gallery_feedback, {
+      fb_data <- input$gallery_feedback
+      save_feedback(repo_root, fb_data$filename, fb_data$dir, fb_data$is_correct)
+      # Update in-memory reactive
+      fb <- feedback_rv()
+      key <- paste0(fb_data$filename, "|", fb_data$dir)
+      fb[[key]] <- fb_data$is_correct
+      feedback_rv(fb)
+    })
+
+    # Feedback handler for modal buttons
+    observeEvent(input$modal_feedback, {
+      fb_data <- input$modal_feedback
+      save_feedback(repo_root, fb_data$filename, fb_data$dir, fb_data$is_correct)
+      # Update in-memory reactive
+      fb <- feedback_rv()
+      key <- paste0(fb_data$filename, "|", fb_data$dir)
+      fb[[key]] <- fb_data$is_correct
+      feedback_rv(fb)
+      # Close and re-open modal to refresh status
+      removeModal()
     })
   }
 }

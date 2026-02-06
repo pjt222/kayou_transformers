@@ -4,12 +4,14 @@
 \alias{kt_browse}
 \title{Browse the card database in a Shiny app}
 \usage{
-kt_browse(repo_root = NULL)
+kt_browse(repo_root = NULL, port = 3838)
 }
 \arguments{
 \item{repo_root}{Optional path to the kayou_transformers repository root.
 When provided, the Gallery tab can display scraped card images. If \code{NULL}
 (the default), the app will attempt to auto-detect the repo root.}
+
+\item{port}{Port number for the Shiny app. Defaults to 3838.}
 }
 \description{
 Launches an interactive Shiny application for browsing and filtering

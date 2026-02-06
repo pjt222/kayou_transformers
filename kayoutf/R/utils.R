@@ -74,3 +74,58 @@ load_classification_data <- function(repo_root) {
 
   classification_data
 }
+
+#' Load human feedback data for classified card images
+#'
+#' Reads `scripts/classification_feedback.csv` from the repo root. Returns an
+#' empty data.frame with the expected columns if the file does not exist yet.
+#'
+#' @param repo_root Character path to the repository root.
+#' @return A data.frame with columns `filename`, `current_directory`,
+#'   `is_correct`, and `timestamp`.
+#' @keywords internal
+load_feedback_data <- function(repo_root) {
+  csv_path <- file.path(repo_root, "scripts", "classification_feedback.csv")
+  if (!file.exists(csv_path)) {
+    return(data.frame(
+      filename = character(),
+      current_directory = character(),
+      is_correct = logical(),
+      timestamp = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
+  utils::read.csv(csv_path, stringsAsFactors = FALSE)
+}
+
+#' Save a single feedback row for a classified card image
+#'
+#' Appends one row to `scripts/classification_feedback.csv`. Creates the file
+#' with a header row if it does not exist yet. Rows are append-only; the latest
+#' row per image wins when there are duplicates.
+#'
+#' @param repo_root Character path to the repository root.
+#' @param filename Image filename.
+#' @param current_directory Set directory (e.g. `"TF01"`).
+#' @param is_correct Logical, `TRUE` if the classification is correct.
+#' @return Invisible `NULL`.
+#' @keywords internal
+save_feedback <- function(repo_root, filename, current_directory, is_correct) {
+  csv_path <- file.path(repo_root, "scripts", "classification_feedback.csv")
+  row <- data.frame(
+    filename = filename,
+    current_directory = current_directory,
+    is_correct = is_correct,
+    timestamp = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+    stringsAsFactors = FALSE
+  )
+  write_header <- !file.exists(csv_path)
+  utils::write.table(
+    row, csv_path,
+    sep = ",", row.names = FALSE,
+    col.names = write_header,
+    append = !write_header,
+    quote = TRUE
+  )
+  invisible(NULL)
+}
