@@ -8,7 +8,7 @@ kt_tbl(table_name)
 }
 \arguments{
 \item{table_name}{Character. One of "cards", "sets", "products", "rarities",
-"characters".}
+"characters", "sources".}
 }
 \value{
 A lazy \code{tbl} object (requires \code{dplyr::collect()} to materialize).

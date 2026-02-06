@@ -29,6 +29,9 @@ cat("  - Products:", nrow(products), "rows\n")
 source("data-raw/04_characters.R")
 cat("  - Characters:", nrow(characters), "rows\n")
 
+source("data-raw/06_sources.R")
+cat("  - Sources:", nrow(sources), "rows\n")
+
 # --- Step 2: Run card data scripts for each set ---
 cat("\nStep 2: Building card data per set...\n")
 
@@ -79,6 +82,9 @@ cat("  - cards.parquet written\n")
 
 write_parquet(characters, "inst/extdata/characters.parquet")
 cat("  - characters.parquet written\n")
+
+write_parquet(sources, "inst/extdata/sources.parquet")
+cat("  - sources.parquet written\n")
 
 # --- Step 5: Verify ---
 cat("\nStep 5: Verification...\n")

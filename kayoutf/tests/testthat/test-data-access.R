@@ -113,3 +113,43 @@ test_that("TFO01 has The Primes subset", {
   expect_equal(nrow(result), 13)
   expect_true("Prima Prime" %in% result$character_name)
 })
+
+test_that("kt_sources returns tibble with expected columns", {
+  result <- kt_sources()
+  expect_s3_class(result, "tbl_df")
+  expected_cols <- c("source_id", "set_code", "source_type", "source_url",
+                     "local_path", "description", "access_date", "confidence",
+                     "notes")
+  for (col in expected_cols) {
+    expect_true(col %in% names(result), info = paste("Missing column:", col))
+  }
+  expect_gt(nrow(result), 0)
+})
+
+test_that("kt_sources filters by set", {
+  result <- kt_sources(set = "TFEU01")
+  expect_true(all(result$set_code == "TFEU01"))
+  expect_gt(nrow(result), 0)
+})
+
+test_that("kt_sources filters by type", {
+  result <- kt_sources(type = "booklet")
+  expect_true(all(result$source_type == "booklet"))
+  expect_gt(nrow(result), 0)
+})
+
+test_that("all source set_codes exist in kt_sets", {
+  sources <- kt_sources()
+  sets <- kt_sets()
+  invalid_sets <- setdiff(sources$set_code, sets$set_code)
+  expect_equal(length(invalid_sets), 0,
+               label = paste("Invalid set_codes in sources:",
+                             paste(invalid_sets, collapse = ", ")))
+})
+
+test_that("kt_tbl works with sources table", {
+  skip_if_not_installed("dplyr")
+  skip_if_not_installed("dbplyr")
+  tbl_result <- kt_tbl("sources")
+  expect_s3_class(tbl_result, "tbl_lazy")
+})

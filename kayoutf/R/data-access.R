@@ -153,13 +153,52 @@ kt_products <- function(set = NULL) {
   tibble::as_tibble(result)
 }
 
+#' List data sources and provenance
+#'
+#' Returns a tibble of source metadata tracking where card data originates,
+#' optionally filtered by set code or source type.
+#'
+#' @param set Character. Filter by set code (e.g. "TFEU01"). Default `NULL`
+#'   returns all sets.
+#' @param type Character. Filter by source type (e.g. "booklet", "website").
+#'   Default `NULL` returns all types.
+#'
+#' @return A [tibble::tibble] of source metadata.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_sources()
+#' kt_sources(set = "TFEU01")
+#' kt_sources(type = "booklet")
+#' }
+kt_sources <- function(set = NULL, type = NULL) {
+  con <- kt_connection()
+  query <- "SELECT * FROM sources WHERE 1=1"
+  params <- list()
+
+  if (!is.null(set)) {
+    query <- paste0(query, " AND set_code = ?")
+    params <- c(params, list(set))
+  }
+  if (!is.null(type)) {
+    query <- paste0(query, " AND source_type = ?")
+    params <- c(params, list(type))
+  }
+
+  query <- paste0(query, " ORDER BY set_code, source_id")
+
+  result <- DBI::dbGetQuery(con, query, params = params)
+  tibble::as_tibble(result)
+}
+
 #' Get a lazy dbplyr table
 #'
 #' Returns a lazy `tbl` object for advanced queries using dplyr verbs.
 #' Requires the `dplyr` and `dbplyr` packages.
 #'
 #' @param table_name Character. One of "cards", "sets", "products", "rarities",
-#'   "characters".
+#'   "characters", "sources".
 #'
 #' @return A lazy `tbl` object (requires `dplyr::collect()` to materialize).
 #' @export
@@ -171,7 +210,7 @@ kt_products <- function(set = NULL) {
 #'   dplyr::collect()
 #' }
 kt_tbl <- function(table_name) {
-  valid_tables <- c("cards", "sets", "products", "rarities", "characters")
+  valid_tables <- c("cards", "sets", "products", "rarities", "characters", "sources")
   if (!table_name %in% valid_tables) {
     stop(
       "Unknown table: ", table_name, ". ",
@@ -186,4 +225,24 @@ kt_tbl <- function(table_name) {
 
   con <- kt_connection()
   dplyr::tbl(con, table_name)
+}
+
+#' Browse the card database in a Shiny app
+#'
+#' Launches an interactive Shiny application for browsing and filtering
+#' cards, sets, rarities, characters, and products. Requires the `shiny`,
+#' `bslib`, `bsicons`, and `DT` packages.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_browse()
+#' }
+kt_browse <- function() {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("Package 'shiny' is required for kt_browse(). ",
+         "Install it with install.packages('shiny').", call. = FALSE)
+  }
+  shiny::runApp(system.file("app", package = "kayoutf"))
 }

@@ -33,7 +33,7 @@ kt_connection <- function() {
 #' @keywords internal
 register_parquet_tables <- function(con) {
   data_dir <- system.file("extdata", package = "kayoutf")
-  tables <- c("sets", "products", "rarities", "cards", "characters")
+  tables <- c("sets", "products", "rarities", "cards", "characters", "sources")
 
   for (table_name in tables) {
     parquet_path <- file.path(data_dir, paste0(table_name, ".parquet"))
