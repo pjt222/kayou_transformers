@@ -1,0 +1,25 @@
+Type: project
+Title: Kayou Transformers Trading Card Database
+Version: 0.1.0
+Description: Data repository and R package for Kayou Transformers trading cards.
+    Includes the kayoutf R package, image scraping scripts, and reference data.
+Depends:
+    R (>= 4.5.0)
+Imports:
+    DBI,
+    duckdb,
+    tibble,
+    dplyr,
+    dbplyr,
+    arrow,
+    rvest,
+    httr2,
+    jsonlite,
+    shiny,
+    bslib,
+    bsicons,
+    DT,
+    devtools,
+    roxygen2,
+    usethis,
+    testthat (>= 3.0.0)
