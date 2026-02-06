@@ -19,15 +19,30 @@ library(httr2)
 library(jsonlite)
 
 # --- Configuration ---
-repo_root <- normalizePath(file.path(dirname(sys.frame(1)$ofile), ".."))
-user_agent <- "kayoutf-image-collector/1.0 (R; trading card research)"
+# Resolve repo root: works from Rscript CLI and source() in RStudio
+repo_root <- tryCatch(
+  normalizePath(file.path(dirname(sys.frame(1)$ofile), "..")),
+  error = function(e) {
+    # Fallback: use commandArgs to find script path
+    args <- commandArgs(trailingOnly = FALSE)
+    file_arg <- grep("^--file=", args, value = TRUE)
+    if (length(file_arg) > 0) {
+      normalizePath(file.path(dirname(sub("^--file=", "", file_arg)), ".."))
+    } else {
+      normalizePath(".")
+    }
+  }
+)
+user_agent <- "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 # Search terms per set, organized by source
 search_config <- list(
   TFKB01 = list(
     ebay = c(
       "kayou transformers TFKB01",
-      "kayou transformers series B ACG"
+      "kayou transformers series B ACG",
+      "kayou transformers movie card SR",
+      "kayou transformers drift crosshairs barricade card"
     ),
     baidu = c(
       "\u5361\u6e38 \u53d8\u5f62\u91d1\u521a TFKB01",
@@ -162,30 +177,28 @@ url_extension <- function(url) {
 }
 
 # ===========================================================================
-# Source 1: eBay Search
+# Source 1: eBay (two-step: search for IDs, then fetch listing pages)
 # ===========================================================================
 
-#' Search eBay and extract listing image URLs
+#' Extract listing IDs from eBay search results page
+#'
+#' eBay renders search results client-side, but embeds listing IDs
+#' in the page source as JSON data. This extracts those IDs.
 #'
 #' @param query Search query string
-#' @param max_results Maximum number of results to process
-#' @return Data frame with columns: listing_id, image_url, title
-scrape_ebay_search <- function(query, max_results = 48) {
-  encoded_query <- utils::URLencode(query)
-  search_url <- paste0(
-    "https://www.ebay.com/sch/i.html?_nkw=", encoded_query,
-    "&_sacat=0&LH_BIN=1&_ipg=", max_results
-  )
-
+#' @return Character vector of listing IDs
+ebay_search_listing_ids <- function(query) {
   cat("  eBay search:", query, "\n")
 
-  page <- tryCatch(
+  body <- tryCatch(
     {
-      resp <- request(search_url) |>
+      resp <- request("https://www.ebay.com/sch/i.html") |>
+        req_url_query(`_nkw` = query, `_sacat` = "0",
+                      LH_BIN = "1", `_ipg` = "48") |>
         req_headers("User-Agent" = user_agent) |>
         req_timeout(30) |>
         req_perform()
-      read_html(resp_body_string(resp))
+      resp_body_string(resp)
     },
     error = function(e) {
       warning("  Failed to fetch eBay search: ", conditionMessage(e),
@@ -193,60 +206,83 @@ scrape_ebay_search <- function(query, max_results = 48) {
       return(NULL)
     }
   )
-  if (is.null(page)) return(data.frame())
+  if (is.null(body)) return(character(0))
 
-  # eBay search results use s-item class
-  items <- html_nodes(page, ".s-item")
-  if (length(items) == 0) {
-    cat("  No eBay results found\n")
-    return(data.frame())
+  # Extract listing IDs embedded in the page's JavaScript data
+  id_matches <- regmatches(body,
+    gregexpr('"listingId"\\s*:\\s*"(\\d+)"', body))[[1]]
+  listing_ids <- unique(gsub("[^0-9]", "", id_matches))
+
+  cat("    Found", length(listing_ids), "listing IDs\n")
+  listing_ids
+}
+
+#' Fetch an individual eBay listing page and extract images
+#'
+#' Individual listing pages are server-rendered and contain real image URLs.
+#'
+#' @param listing_id eBay listing ID
+#' @return Data frame with columns: listing_id, image_url, title
+ebay_fetch_listing_images <- function(listing_id) {
+  listing_url <- paste0("https://www.ebay.com/itm/", listing_id)
+
+  body <- tryCatch(
+    {
+      resp <- request(listing_url) |>
+        req_headers("User-Agent" = user_agent) |>
+        req_timeout(30) |>
+        req_perform()
+      resp_body_string(resp)
+    },
+    error = function(e) {
+      warning("  Failed to fetch listing ", listing_id, ": ",
+              conditionMessage(e), call. = FALSE)
+      return(NULL)
+    }
+  )
+  if (is.null(body)) return(data.frame())
+
+  page <- read_html(body)
+
+  # Get title
+  title <- html_text(
+    html_node(page, "h1.x-item-title__mainTitle, h1[itemprop='name'], .x-item-title span"),
+    trim = TRUE
+  )
+  if (is.na(title)) title <- ""
+
+  # Get primary image via og:image meta tag (most reliable)
+  og_image <- html_attr(html_node(page, "meta[property='og:image']"), "content")
+
+  # Also extract all product images from page source
+  all_imgs <- regmatches(body,
+    gregexpr("https://i\\.ebayimg\\.com/images/g/[A-Za-z0-9~_-]+/s-l[0-9]+\\.(?:jpg|png|webp)",
+             body, perl = TRUE))[[1]]
+  all_imgs <- unique(all_imgs)
+
+  # Upgrade all to large size (s-l1600)
+  all_imgs <- sub("/s-l\\d+\\.", "/s-l1600.", all_imgs)
+  all_imgs <- unique(all_imgs)
+
+  # If og:image exists and not in list, add it first
+  if (!is.na(og_image) && nchar(og_image) > 0) {
+    og_large <- sub("/s-l\\d+\\.", "/s-l1600.", og_image)
+    all_imgs <- unique(c(og_large, all_imgs))
   }
 
-  results <- lapply(items, function(item) {
-    img_node <- html_node(item, ".s-item__image-wrapper img")
-    link_node <- html_node(item, ".s-item__link")
-    title_node <- html_node(item, ".s-item__title")
+  if (length(all_imgs) == 0) return(data.frame())
 
-    image_url <- html_attr(img_node, "src")
-    # eBay sometimes uses data-src for lazy loading
-    if (is.na(image_url) || grepl("gif$", image_url)) {
-      image_url <- html_attr(img_node, "data-src")
-    }
-    listing_url <- html_attr(link_node, "href")
-    title <- html_text(title_node, trim = TRUE)
-
-    # Extract listing ID from URL
-    listing_id <- sub(".*/(\\d{9,15}).*", "\\1", listing_url)
-    if (nchar(listing_id) > 15 || !grepl("^\\d+$", listing_id)) {
-      listing_id <- NA_character_
-    }
-
-    # Upgrade eBay thumbnail to larger image
-    # eBay thumbnails use /s-l225.jpg or /s-l300.jpg; upgrade to /s-l800.jpg
-    if (!is.na(image_url)) {
-      image_url <- sub("/s-l\\d+\\.", "/s-l800.", image_url)
-    }
-
-    data.frame(
-      listing_id = listing_id,
-      image_url = image_url,
-      title = title,
-      stringsAsFactors = FALSE
-    )
-  })
-
-  results_df <- do.call(rbind, results)
-  # Remove rows with missing image URLs or listing IDs
-  results_df <- results_df[!is.na(results_df$image_url) &
-                             !is.na(results_df$listing_id), ]
-  # Remove "Shop on eBay" placeholder entries
-  results_df <- results_df[!grepl("^Shop on eBay$", results_df$title), ]
-
-  cat("  Found", nrow(results_df), "listings with images\n")
-  results_df
+  data.frame(
+    listing_id = listing_id,
+    image_url = all_imgs,
+    title = title,
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Run eBay scraping for a set
+#'
+#' Two-step approach: (1) search for listing IDs, (2) fetch each listing page.
 #'
 #' @param set_code Set code
 #' @param search_terms Character vector of search queries
@@ -254,28 +290,48 @@ scrape_ebay_search <- function(query, max_results = 48) {
 #' @return Updated download log
 scrape_ebay_for_set <- function(set_code, search_terms, log_df) {
   cards_dir <- ensure_cards_dir(set_code)
-  seen_listing_ids <- character()
 
+  # Step 1: Collect all unique listing IDs across search terms
+  all_listing_ids <- character()
   for (query in search_terms) {
-    results <- scrape_ebay_search(query)
-    if (nrow(results) == 0) next
+    ids <- ebay_search_listing_ids(query)
+    all_listing_ids <- unique(c(all_listing_ids, ids))
+    Sys.sleep(rate_limits$ebay)
+  }
+
+  if (length(all_listing_ids) == 0) {
+    cat("  No eBay listings found\n")
+    return(log_df)
+  }
+
+  cat("  Total unique listings to fetch:", length(all_listing_ids), "\n")
+
+  # Step 2: Fetch each listing page for images
+  for (listing_id in all_listing_ids) {
+    cat("  Listing:", listing_id, "")
+    results <- ebay_fetch_listing_images(listing_id)
+
+    if (nrow(results) == 0) {
+      cat("(no images)\n")
+      log_df <- append_log(log_df, "ebay", set_code, listing_id,
+                           NA_character_, NA_character_, FALSE)
+      Sys.sleep(rate_limits$ebay)
+      next
+    }
+
+    cat("- ", results$title[1], " (", nrow(results), " images)\n", sep = "")
 
     for (i in seq_len(nrow(results))) {
       row <- results[i, ]
-
-      # Skip duplicates across search terms
-      if (row$listing_id %in% seen_listing_ids) next
-      seen_listing_ids <- c(seen_listing_ids, row$listing_id)
-
       ext <- url_extension(row$image_url)
-      filename <- paste0("ebay_", row$listing_id, ".", ext)
+      filename <- sprintf("ebay_%s_%02d.%s", listing_id, i, ext)
       output_path <- file.path(cards_dir, filename)
       relative_path <- file.path(set_code, "cards", filename)
 
       success <- download_image(row$image_url, output_path,
                                 delay = rate_limits$ebay)
 
-      log_df <- append_log(log_df, "ebay", set_code, query,
+      log_df <- append_log(log_df, "ebay", set_code, listing_id,
                            row$image_url, relative_path, success)
     }
 
@@ -529,18 +585,21 @@ scrape_baidu_images <- function(query, max_results = 30) {
   # Parse JSON response
   parsed <- tryCatch(
     fromJSON(response, simplifyVector = FALSE),
-    error = function(e) {
-      warning("  Failed to parse Baidu JSON: ", conditionMessage(e),
-              call. = FALSE)
-      return(NULL)
-    }
+    error = function(e) NULL
   )
+
+  # Check for spider block
+  if (!is.null(parsed) && !is.null(parsed$antiFlag)) {
+    cat("    Baidu blocked request:", parsed$message, "\n")
+    return(data.frame())
+  }
+
   if (is.null(parsed)) return(data.frame())
 
   # Extract image data from results
   image_data <- parsed$data
   if (is.null(image_data) || length(image_data) == 0) {
-    cat("  No Baidu results found\n")
+    cat("    No results\n")
     return(data.frame())
   }
 
@@ -577,7 +636,7 @@ scrape_baidu_images <- function(query, max_results = 30) {
   # Remove HTML tags from titles
   results_df$title <- gsub("<[^>]+>", "", results_df$title)
 
-  cat("  Found", nrow(results_df), "Baidu images\n")
+  cat("    Found", nrow(results_df), "images\n")
   results_df
 }
 
