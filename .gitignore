@@ -7,3 +7,6 @@ kayoutf/data-raw/sources/*.rds
 .Rhistory
 .RData
 .Rproj.user/
+
+# Rust build artifacts
+tools/classify/target/
