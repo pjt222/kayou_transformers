@@ -3,12 +3,17 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use base64::Engine;
+use async_trait::async_trait;
 use indicatif::{ProgressBar, ProgressStyle};
 use tokio::sync::mpsc;
 
-use crate::api::ApiClient;
-use crate::types::CsvRow;
+use crate::types::{ClassificationResult, CsvRow};
+
+/// Trait for classification backends (API or CLI).
+#[async_trait]
+pub trait Classifier: Send + Sync {
+    async fn classify(&self, image_path: &Path, system_prompt: &str) -> Result<ClassificationResult>;
+}
 
 pub const VALID_SETS: &[&str] = &[
     "TF01", "TF02", "TF03", "TFKB01", "TFH01", "TFO01", "TF40Y", "TFEU01",
@@ -92,20 +97,6 @@ pub fn discover_images(root: &Path, target_set: Option<&str>) -> Result<Vec<Path
     Ok(images)
 }
 
-/// Determine media type from file extension.
-fn media_type_for(path: &Path) -> &'static str {
-    match path
-        .extension()
-        .and_then(|e| e.to_str())
-        .map(|e| e.to_lowercase())
-        .as_deref()
-    {
-        Some("png") => "image/png",
-        Some("webp") => "image/webp",
-        _ => "image/jpeg",
-    }
-}
-
 /// Extract the set directory name from a path like `.../TF01/cards/foo.jpg`.
 fn set_from_path(path: &Path) -> String {
     path.parent() // cards/
@@ -118,7 +109,8 @@ fn set_from_path(path: &Path) -> String {
 
 /// Classify all images, returning new CsvRows.
 pub async fn classify_all(
-    client: Arc<ApiClient>,
+    classifier: Arc<dyn Classifier>,
+    system_prompt: String,
     images: Vec<PathBuf>,
     already_classified: &HashSet<String>,
 ) -> Vec<CsvRow> {
@@ -148,10 +140,12 @@ pub async fn classify_all(
             .progress_chars("=> "),
     );
 
+    let system_prompt = Arc::new(system_prompt);
     let (tx, mut rx) = mpsc::channel::<CsvRow>(total);
 
     for image_path in to_classify {
-        let client = Arc::clone(&client);
+        let classifier = Arc::clone(&classifier);
+        let system_prompt = Arc::clone(&system_prompt);
         let tx = tx.clone();
         let pb = progress.clone();
 
@@ -164,7 +158,7 @@ pub async fn classify_all(
             let current_directory = set_from_path(&image_path);
             let file_path_str = image_path.to_string_lossy().to_string();
 
-            let row = match classify_single(&client, &image_path).await {
+            let row = match classifier.classify(&image_path, &system_prompt).await {
                 Ok(result) => CsvRow::from_classification(
                     &result,
                     &file_path_str,
@@ -198,17 +192,4 @@ pub async fn classify_all(
     // Sort by filename for deterministic output
     results.sort_by(|a, b| a.filename.cmp(&b.filename));
     results
-}
-
-async fn classify_single(
-    client: &ApiClient,
-    image_path: &Path,
-) -> Result<crate::types::ClassificationResult> {
-    let data = std::fs::read(image_path)
-        .with_context(|| format!("failed to read {}", image_path.display()))?;
-
-    let encoded = base64::engine::general_purpose::STANDARD.encode(&data);
-    let media_type = media_type_for(image_path).to_string();
-
-    client.classify_image(encoded, media_type).await
 }

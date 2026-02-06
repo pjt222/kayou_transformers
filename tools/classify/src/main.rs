@@ -1,5 +1,6 @@
 mod api;
 mod classify;
+mod cli_backend;
 mod csv_io;
 mod move_files;
 mod types;
@@ -10,6 +11,8 @@ use std::sync::Arc;
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 
+use classify::Classifier;
+
 #[derive(Parser)]
 #[command(name = "classify", about = "Classify Kayou Transformers card images via Claude API")]
 struct Cli {
@@ -17,9 +20,9 @@ struct Cli {
     #[arg(short, long)]
     set: Option<String>,
 
-    /// Concurrent API requests
-    #[arg(short = 'j', long, default_value_t = 20)]
-    concurrency: usize,
+    /// Concurrent requests (default: 20 for api, 4 for cli)
+    #[arg(short = 'j', long)]
+    concurrency: Option<usize>,
 
     /// Output CSV path
     #[arg(short, long, default_value = "scripts/classification_results.csv")]
@@ -29,9 +32,17 @@ struct Cli {
     #[arg(long)]
     r#move: bool,
 
-    /// Claude model to use
+    /// Claude model to use (for api backend: full model ID; for cli backend: short name)
     #[arg(long, default_value = "claude-sonnet-4-5-20250929")]
     model: String,
+
+    /// Classification backend: "api" (direct API, requires ANTHROPIC_API_KEY) or "cli" (claude -p)
+    #[arg(long, default_value = "api")]
+    backend: String,
+
+    /// Model name for CLI backend (e.g. "sonnet", "opus", "haiku"). Overrides --model for cli.
+    #[arg(long, default_value = "sonnet")]
+    cli_model: String,
 
     /// Repository root directory (auto-detected from binary location)
     #[arg(long)]
@@ -41,6 +52,11 @@ struct Cli {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Validate backend
+    if cli.backend != "api" && cli.backend != "cli" {
+        bail!("Unknown backend '{}'. Use 'api' or 'cli'.", cli.backend);
+    }
 
     // Validate set
     if let Some(ref set) = cli.set {
@@ -71,14 +87,32 @@ async fn main() -> Result<()> {
         root.join(&cli.output)
     };
 
-    // Read API key
-    let api_key = std::env::var("ANTHROPIC_API_KEY")
-        .context("ANTHROPIC_API_KEY environment variable not set")?;
+    // Build classifier based on backend
+    let default_concurrency = if cli.backend == "cli" { 4 } else { 20 };
+    let concurrency = cli.concurrency.unwrap_or(default_concurrency);
+    let system_prompt = classify::build_system_prompt();
+
+    let (classifier, backend_label, model_label): (Arc<dyn Classifier>, &str, String) =
+        if cli.backend == "cli" {
+            let client = cli_backend::CliClient::new(cli.cli_model.clone(), concurrency);
+            (Arc::new(client), "cli (claude -p)", cli.cli_model.clone())
+        } else {
+            let api_key = std::env::var("ANTHROPIC_API_KEY")
+                .context("ANTHROPIC_API_KEY environment variable not set (use --backend cli for OAuth)")?;
+            let client = api::ApiClient::new(
+                api_key,
+                cli.model.clone(),
+                system_prompt.clone(),
+                concurrency,
+            );
+            (Arc::new(client), "api (direct)", cli.model.clone())
+        };
 
     eprintln!("=== Kayou Transformers Card Image Classifier (Rust) ===\n");
     eprintln!("Root:        {}", root.display());
-    eprintln!("Model:       {}", cli.model);
-    eprintln!("Concurrency: {}", cli.concurrency);
+    eprintln!("Backend:     {}", backend_label);
+    eprintln!("Model:       {}", model_label);
+    eprintln!("Concurrency: {}", concurrency);
     eprintln!("Output:      {}", output_path.display());
     if let Some(ref set) = cli.set {
         eprintln!("Target set:  {}", set.to_uppercase());
@@ -105,17 +139,8 @@ async fn main() -> Result<()> {
 
     eprintln!("Found {} images total", images.len());
 
-    // Build client
-    let system_prompt = classify::build_system_prompt();
-    let client = Arc::new(api::ApiClient::new(
-        api_key,
-        cli.model.clone(),
-        system_prompt,
-        cli.concurrency,
-    ));
-
     // Classify
-    let new_rows = classify::classify_all(client, images, &already_classified).await;
+    let new_rows = classify::classify_all(classifier, system_prompt, images, &already_classified).await;
 
     // Merge and write
     let mut all_rows = existing_rows;

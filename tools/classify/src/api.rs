@@ -1,9 +1,13 @@
+use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
+use async_trait::async_trait;
+use base64::Engine;
 use reqwest::Client;
 use tokio::sync::Semaphore;
 
+use crate::classify::Classifier;
 use crate::types::*;
 
 const API_URL: &str = "https://api.anthropic.com/v1/messages";
@@ -129,6 +133,33 @@ impl ApiClient {
             // Exponential backoff, capped at 60s
             backoff = (backoff * 2).min(Duration::from_secs(60));
         }
+    }
+}
+
+#[async_trait]
+impl Classifier for ApiClient {
+    async fn classify(&self, image_path: &Path, _system_prompt: &str) -> Result<ClassificationResult> {
+        let data = std::fs::read(image_path)
+            .with_context(|| format!("failed to read {}", image_path.display()))?;
+
+        let encoded = base64::engine::general_purpose::STANDARD.encode(&data);
+        let media_type = media_type_for(image_path).to_string();
+
+        self.classify_image(encoded, media_type).await
+    }
+}
+
+/// Determine media type from file extension.
+fn media_type_for(path: &Path) -> &'static str {
+    match path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_lowercase())
+        .as_deref()
+    {
+        Some("png") => "image/png",
+        Some("webp") => "image/webp",
+        _ => "image/jpeg",
     }
 }
 

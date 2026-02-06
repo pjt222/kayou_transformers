@@ -17,6 +17,7 @@ clap = { version = "4", features = ["derive"] }
 base64 = "0.22"
 indicatif = "0.17"
 anyhow = "1"
+async-trait = "0.1"
 
 [profile.release]
 opt-level = 2
