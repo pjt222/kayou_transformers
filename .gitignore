@@ -1,0 +1,9 @@
+# R build artifacts
+kayoutf/data-raw/sources/*.rds
+*.Rcheck/
+*.tar.gz
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/

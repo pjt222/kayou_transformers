@@ -1,0 +1,189 @@
+#' Query cards from the database
+#'
+#' Returns a tibble of cards, optionally filtered by set, rarity, character,
+#' or faction.
+#'
+#' @param set Character. Filter by set code (e.g. "TFEU01"). Default `NULL`
+#'   returns all sets.
+#' @param rarity Character. Filter by rarity code (e.g. "SSR"). Default `NULL`.
+#' @param character Character. Filter by character name (partial match).
+#'   Default `NULL`.
+#' @param faction Character. Filter by faction (e.g. "Autobot", "Decepticon").
+#'   Default `NULL`.
+#'
+#' @return A [tibble::tibble].
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_cards()
+#' kt_cards(set = "TFEU01")
+#' kt_cards(set = "TFEU01", rarity = "SSR")
+#' kt_cards(faction = "Autobot")
+#' }
+kt_cards <- function(set = NULL, rarity = NULL, character = NULL,
+                     faction = NULL) {
+  con <- kt_connection()
+  query <- "SELECT * FROM cards WHERE 1=1"
+  params <- list()
+
+  if (!is.null(set)) {
+    query <- paste0(query, " AND set_code = ?")
+    params <- c(params, list(set))
+  }
+  if (!is.null(rarity)) {
+    query <- paste0(query, " AND rarity_code = ?")
+    params <- c(params, list(rarity))
+  }
+  if (!is.null(character)) {
+    query <- paste0(query, " AND character_name ILIKE ?")
+    params <- c(params, list(paste0("%", character, "%")))
+  }
+  if (!is.null(faction)) {
+    query <- paste0(query, " AND faction = ?")
+    params <- c(params, list(faction))
+  }
+
+  query <- paste0(query, " ORDER BY set_code, rarity_code, card_number")
+
+  result <- DBI::dbGetQuery(con, query, params = params)
+  tibble::as_tibble(result)
+}
+
+#' List all card sets
+#'
+#' @return A [tibble::tibble] of set metadata.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_sets()
+#' }
+kt_sets <- function() {
+  con <- kt_connection()
+  result <- DBI::dbGetQuery(con, "SELECT * FROM sets ORDER BY release_year, set_code")
+  tibble::as_tibble(result)
+}
+
+#' List rarity tiers
+#'
+#' @param set Character. Filter by set code. Default `NULL` returns all.
+#'
+#' @return A [tibble::tibble] of rarity definitions.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_rarities()
+#' kt_rarities(set = "TFEU01")
+#' }
+kt_rarities <- function(set = NULL) {
+  con <- kt_connection()
+  if (is.null(set)) {
+    result <- DBI::dbGetQuery(
+      con,
+      "SELECT * FROM rarities ORDER BY set_code, sort_order"
+    )
+  } else {
+    result <- DBI::dbGetQuery(
+      con,
+      "SELECT * FROM rarities WHERE set_code = ? ORDER BY sort_order",
+      params = list(set)
+    )
+  }
+
+  tibble::as_tibble(result)
+}
+
+#' List characters
+#'
+#' @param faction Character. Filter by faction. Default `NULL` returns all.
+#'
+#' @return A [tibble::tibble] of character reference data.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_characters()
+#' kt_characters(faction = "Autobot")
+#' }
+kt_characters <- function(faction = NULL) {
+  con <- kt_connection()
+  if (is.null(faction)) {
+    result <- DBI::dbGetQuery(
+      con,
+      "SELECT * FROM characters ORDER BY character_name"
+    )
+  } else {
+    result <- DBI::dbGetQuery(
+      con,
+      "SELECT * FROM characters WHERE faction = ? ORDER BY character_name",
+      params = list(faction)
+    )
+  }
+  tibble::as_tibble(result)
+}
+
+#' List products (pack types)
+#'
+#' @param set Character. Filter by set code. Default `NULL` returns all.
+#'
+#' @return A [tibble::tibble] of product/pack metadata.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_products()
+#' kt_products(set = "TFEU01")
+#' }
+kt_products <- function(set = NULL) {
+  con <- kt_connection()
+  if (is.null(set)) {
+    result <- DBI::dbGetQuery(
+      con,
+      "SELECT * FROM products ORDER BY set_code, product_id"
+    )
+  } else {
+    result <- DBI::dbGetQuery(
+      con,
+      "SELECT * FROM products WHERE set_code = ? ORDER BY product_id",
+      params = list(set)
+    )
+  }
+  tibble::as_tibble(result)
+}
+
+#' Get a lazy dbplyr table
+#'
+#' Returns a lazy `tbl` object for advanced queries using dplyr verbs.
+#' Requires the `dplyr` and `dbplyr` packages.
+#'
+#' @param table_name Character. One of "cards", "sets", "products", "rarities",
+#'   "characters".
+#'
+#' @return A lazy `tbl` object (requires `dplyr::collect()` to materialize).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' kt_tbl("cards") |>
+#'   dplyr::filter(faction == "Autobot") |>
+#'   dplyr::collect()
+#' }
+kt_tbl <- function(table_name) {
+  valid_tables <- c("cards", "sets", "products", "rarities", "characters")
+  if (!table_name %in% valid_tables) {
+    stop(
+      "Unknown table: ", table_name, ". ",
+      "Valid tables: ", paste(valid_tables, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  if (!requireNamespace("dplyr", quietly = TRUE)) {
+    stop("Package 'dplyr' is required for kt_tbl(). Install it with install.packages('dplyr').", call. = FALSE)
+  }
+
+  con <- kt_connection()
+  dplyr::tbl(con, table_name)
+}
