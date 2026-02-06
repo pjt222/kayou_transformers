@@ -236,6 +236,7 @@ kt_tbl <- function(table_name) {
 #' @param repo_root Optional path to the kayou_transformers repository root.
 #'   When provided, the Gallery tab can display scraped card images. If `NULL`
 #'   (the default), the app will attempt to auto-detect the repo root.
+#' @param port Port number for the Shiny app. Defaults to 3838.
 #'
 #' @export
 #'
@@ -244,7 +245,7 @@ kt_tbl <- function(table_name) {
 #' kt_browse()
 #' kt_browse(repo_root = "/path/to/kayou_transformers")
 #' }
-kt_browse <- function(repo_root = NULL) {
+kt_browse <- function(repo_root = NULL, port = 3838) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("Package 'shiny' is required for kt_browse(). ",
          "Install it with install.packages('shiny').", call. = FALSE)
@@ -252,5 +253,5 @@ kt_browse <- function(repo_root = NULL) {
   old_opt <- getOption("kayoutf.repo_root")
   options(kayoutf.repo_root = repo_root)
   on.exit(options(kayoutf.repo_root = old_opt), add = TRUE)
-  shiny::runApp(system.file("app", package = "kayoutf"))
+  shiny::runApp(system.file("app", package = "kayoutf"), port = port)
 }

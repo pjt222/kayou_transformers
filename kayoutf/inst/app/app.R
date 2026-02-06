@@ -23,15 +23,24 @@ gallery_available <- FALSE
 
 if (!is.null(repo_root)) {
   gallery_data <- load_classification_data(repo_root)
-  if (!is.null(gallery_data)) {
-    gallery_available <- TRUE
-    # Register resource paths per set so images are servable
-    gallery_sets <- unique(gallery_data$current_directory)
-    for (set_dir in gallery_sets) {
-      cards_path <- file.path(repo_root, set_dir, "cards")
-      if (dir.exists(cards_path)) {
-        shiny::addResourcePath(paste0("gallery-", set_dir), cards_path)
-      }
+}
+
+# Fallback: if provided path didn't work (e.g. WSL vs Windows), try auto-detect
+if (is.null(gallery_data)) {
+  auto_root <- find_repo_root()
+  if (!is.null(auto_root) && !identical(auto_root, repo_root)) {
+    gallery_data <- load_classification_data(auto_root)
+    if (!is.null(gallery_data)) repo_root <- auto_root
+  }
+}
+
+if (!is.null(gallery_data)) {
+  gallery_available <- TRUE
+  gallery_sets <- unique(gallery_data$current_directory)
+  for (set_dir in gallery_sets) {
+    cards_path <- file.path(repo_root, set_dir, "cards")
+    if (dir.exists(cards_path)) {
+      shiny::addResourcePath(paste0("gallery-", set_dir), cards_path)
     }
   }
 }
