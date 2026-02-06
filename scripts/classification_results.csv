@@ -1,0 +1,55 @@
+"is_card","set_code","rarity_code","character_name","card_number","confidence","notes","file_path","filename","current_directory","needs_move","move_to"
+TRUE,"TF01","XR-SH","Optimus Prime","001","high","These cards are from the G1 cartoon series and belong to the ","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_01.jpg","ebay_227199105264_01.jpg","TF01",FALSE,NA
+TRUE,"TFEU01","WR","Zarina","002","high","Transformers Energon Universe","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_02.jpg","ebay_227199105264_02.jpg","TF01",TRUE,"TFEU01"
+TRUE,"TF01","UR","Optimus Prime","006","medium","G1 cartoon style, Chinese text on cards, card numbers like R-001, SR-005.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_03.jpg","ebay_227199105264_03.jpg","TF01",FALSE,NA
+FALSE,"TF01","","","","high","Looney Tunes All-Stars trading card box.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_04.jpg","ebay_227199105264_04.jpg","TF01",FALSE,NA
+TRUE,"TF01","R","Spider-Man","001","high","G1 Animated Version, Marvel Comic - 1983","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_05.jpg","ebay_227199105264_05.jpg","TF01",FALSE,NA
+FALSE,"TF01","UR","Megatron","R-001","high","G1 cartoon style, Chinese text.
+Art style:
+- TF01-TF03 (Series 1-3): G1 cartoon style, Chinese text, rarities BP/LR/AR/UR/SHR/SSR/HR/SR/R. Card numbers like R-001, SR-005.
+TFH01 (Headmasters): Headmasters anime style, includes SL (Scene. Landscape) horizontal cards. Rarities: BP/PR/UR/SSR/SR/SL.
+TF40Y (40th Anniversary): Mixed G1/Beast Wars/Movie art. XR limited to 199 copies. Rarities: XR/USR/CR/LGR/UR/HR/SSR/SR + SCR/TY/PR exclusives.
+TF02 (Series 2): 124 cards, rarities: BP/LR/AR/UR/SHR/SSR/HR/SR/R. ""TF01"":""TF01"".
+TFH03 (Headmasters 3): 124 cards, rarities: BP/LR/AR/UR/SHR/SSR/HR/SR/R. 124 cards
+TFH04 (Beast Wars): 124 cards, ""rarities: UR/SHR/UR/SSR/HR/SSR/HR/SR/TP. 124 cards.
+TF05 (G1 Series): 124 cards, rarities:  , ""rarities: 006. 
+TF05 (G1 Series 3): ""The list of card numbers is not complete.
+TF06 (Transformers 4th Anniversary): 124 cards, rarities: BP/LR/AR/UR/SHR/SSR  , ""rarities: 007. 
+TF07 (Beast Wars: 124 cards, rarities: BP/LR/AR/UR/SHR/SSR  , ""rarities: 008. 
+TF08 (Beast Wars: 124 cards, ""rarities: "" (""rarities: 009. 
+TF08 (Beast Wars: 124 cards, ""rarities: 010. 
+TF09 (Transformers:  ","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_06.jpg","ebay_227199105264_06.jpg","TF01",FALSE,NA
+TRUE,"TFEU01","XR","Man-Thing","WR-001","high","WALL-CLHINGPOWERS","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_07.jpg","ebay_227199105264_07.jpg","TF01",TRUE,"TFEU01"
+FALSE,"TFEU01","TP","Roger Rabbit","","medium","This is the packaging for a Topps Roger Rabbit trading card set. Topps is known for its Topps cereal boxes. The fact that you see a sticker inside suggests it's a sticker set. Typically, Roger Rabbit would appear as a character in this case.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_08.jpg","ebay_227199105264_08.jpg","TF01",FALSE,NA
+TRUE,"TFH01","SHR","Kim Kong","SHR-005","high","Not a trading card image for a Transformers series, but an image of a card from the animated TV series 'Garbage Pail Kids'.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_09.jpg","ebay_227199105264_09.jpg","TF01",TRUE,"TFH01"
+TRUE,"TFH01","BP","Luke Skywalker","N-A","low","This is a 1977 Star Wars trading card featuring Luke Skywalker from The Empire Strikes Back movie, printed by 20th Century Fox. The card is formatted with the standard 20th Century Fox card number format. Luke Skywalker is a central character from the ","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_10.jpg","ebay_227199105264_10.jpg","TF01",TRUE,"TFH01"
+TRUE,"TFH01","PR","Russ","004","high","Headmasters anime style","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_11.jpg","ebay_227199105264_11.jpg","TF01",TRUE,"TFH01"
+FALSE,"TFEU01","","","","low","Could not identify card type and rarity.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_12.jpg","ebay_227199105264_12.jpg","TF01",FALSE,NA
+FALSE,"TF01","","","","low","Not a card front, likely an image of a store or box.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_13.jpg","ebay_227199105264_13.jpg","TF01",FALSE,NA
+FALSE,"UNKNOWN","UNKNOWN","UNKNOWN","","high","It's not a single card front, but a coaster with a Spider-Man image.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_14.jpg","ebay_227199105264_14.jpg","TF01",FALSE,NA
+FALSE,"TF01","BP","Optimus Prime","001","high","The image is an illustration representing Optimus Prime, a well-known character from the Transformers series. The card number is 001, which is a basic card in the Transformers 1st series.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_15.jpg","ebay_227199105264_15.jpg","TF01",FALSE,NA
+FALSE,"TF40Y","XR","Naruck","194","high","","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_16.jpg","ebay_227199105264_16.jpg","TF01",FALSE,NA
+FALSE,"TF01","","","","high","This image does not represent a single card front; instead, it appears to be an advertisement or promotional flyer.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_17.jpg","ebay_227199105264_17.jpg","TF01",FALSE,NA
+FALSE,"UNKNOWN"," UNKNOWN"," UNKNOWN","UNKNOWN","low","Unknown transaction screen","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_18.jpg","ebay_227199105264_18.jpg","TF01",FALSE,NA
+FALSE,"TFH01","BP","Primus Prime","*","low","The information provided seems inconsistent with the known details in the instruction. Please provide a card image for analysis","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_19.jpg","ebay_227199105264_19.jpg","TF01",FALSE,NA
+FALSE,"TF40Y","CR","","","low","This is an electronic redemption code, not a physical card from the Transformers trading card series.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/ebay_227199105264_20.jpg","ebay_227199105264_20.jpg","TF01",FALSE,NA
+TRUE,"TF01","UR","Optimus Prime","001","high","","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_10-yuan-box.jpg","tca_10-yuan-box.jpg","TF01",FALSE,NA
+TRUE,"TF01","BP","塞伯坦奥威","","low","Card features G1 art style and Chinese text.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_10-yuan-pack.jpg","tca_10-yuan-pack.jpg","TF01",FALSE,NA
+TRUE,"TF01","BP","SOUNDWAVE","R-009","high","This card is from Set TF01 and is a BP rarity.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_ar-008.jpg","tca_ar-008.jpg","TF01",FALSE,NA
+TRUE,"TF01","BP","Bumblebee","BR-034","high","Chinese text and G1 cartoon style.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_hr-003.jpg","tca_hr-003.jpg","TF01",FALSE,NA
+TRUE,"TFO01","UR-S","Megatron","R-009","high","Transformers One set, G1 style card.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_hr-017.jpg","tca_hr-017.jpg","TF01",TRUE,"TFO01"
+TRUE,"TF01","BP-041","Windblade","R-041","high","Modern Western comic art style, English text","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-005.jpg","tca_r-005.jpg","TF01",FALSE,NA
+TRUE,"TF01","HR-007","Ironhide","HR-007","high","The card is from the Transformer Headmasters anime style with Chinese text on cards.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-009.jpg","tca_r-009.jpg","TF01",FALSE,NA
+TRUE,"TF01","R-001","Blurr","001","high","卡面上印有中文字符，表示稀有等级。可见卡号格式为“R-001”，表示系列1中的第1张卡。","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-012.jpg","tca_r-012.jpg","TF01",FALSE,NA
+TRUE,"TF01","UR","Whirl","R-01","low","cartoon style","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-015.jpg","tca_r-015.jpg","TF01",FALSE,NA
+TRUE,"TF01","UR","Thunderhool","R-005","high","This card is in the Series 1 (TF01) set and falls under the UR (Uncommon) rarity.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-017.jpg","tca_r-017.jpg","TF01",FALSE,NA
+TRUE,"TF01","SR-005","QINLU","R-0064","high","This card is specifically a rare card of 0064 among 001-124 in this set.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-029.jpg","tca_r-029.jpg","TF01",FALSE,NA
+TRUE,"TF01","R","Clobber","031/036","high","Transformers One","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_r-031.jpg","tca_r-031.jpg","TF01",FALSE,NA
+TRUE,"TF01","LR","Grimlock","R-001","high","This card is part of Series 1, which contains 124 cards with G1 cartoon art, Chinese text, and varied rarity codes.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_sr-005.jpg","tca_sr-005.jpg","TF01",FALSE,NA
+TRUE,"TF01","SR","Megatron","SR-012/020","high","The image shows a card from the TF01 Series 1 set. The artist style is not distinguishable here, but the card uses G1 comic art in Chinese text with a Chinese numerals format.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_sr-012.jpg","tca_sr-012.jpg","TF01",FALSE,NA
+TRUE,"TF01","SR","Thundercracker","TF01-07","high","G1 cartoon style, Chinese text, SR rarity","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_sr-017.jpg","tca_sr-017.jpg","TF01",FALSE,NA
+TRUE,"TF02","SHR","Starscream","TF01-SSR-044/046","high","Chinese text on card","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_ssr-004.jpg","tca_ssr-004.jpg","TF01",TRUE,"TF02"
+TRUE,"TF01","SSR","Human","TF-01SSR-SSR006016","medium","This card is from the Transformers: Generation 1 ('G1') series and has a Chinese text on it. The card number format is 'SSR' followed by numbers. The card appears to be a collectible item from the series, although it requires further verification of the rarity code for precise identification.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_ssr-006.jpg","tca_ssr-006.jpg","TF01",FALSE,NA
+TRUE,"TF01","SSR","Optimus Prime","TF01-SSR-004/016","high","","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_ssr-016.jpg","tca_ssr-016.jpg","TF01",FALSE,NA
+TRUE,"TF02","UR","Megatron","UR-05","high","Series 2 G1 transformers card with both art styles.","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_ur-006.jpg","tca_ur-006.jpg","TF01",TRUE,"TF02"
+TRUE,"TF01","UR","Skywalks","008/009","high","","D:\dev\p\trading_card_games\kayou_transformers/TF01/cards/tca_ur-008.jpg","tca_ur-008.jpg","TF01",FALSE,NA
