@@ -8,6 +8,9 @@ kayoutf/data-raw/sources/*.rds
 .RData
 .Rproj.user/
 
+# Generated CSV artifacts
+scripts/*.csv
+
 # Rust build artifacts
 tools/classify/target/
 tools/scrape/target/

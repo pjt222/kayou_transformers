@@ -68,6 +68,48 @@ all_cards <- bind_rows(
 )
 cat("  - Total cards:", nrow(all_cards), "\n")
 
+# --- Step 3b: Validate combined data ---
+cat("\nStep 3b: Validating combined data...\n")
+
+# Check expected columns
+expected_card_cols <- c("card_id", "set_code", "rarity_code", "card_number",
+                        "card_name_en", "card_name_zh", "character_name",
+                        "faction", "card_type", "is_parallel", "parallel_of",
+                        "product_exclusive", "print_run", "image_url")
+missing_cols <- setdiff(expected_card_cols, names(all_cards))
+if (length(missing_cols) > 0) {
+  stop("Cards missing columns: ", paste(missing_cols, collapse = ", "))
+}
+
+# Check for duplicate card_ids
+dup_ids <- all_cards$card_id[duplicated(all_cards$card_id)]
+if (length(dup_ids) > 0) {
+  stop("Duplicate card_ids: ", paste(head(dup_ids, 10), collapse = ", "))
+}
+
+# Check total matches sum of set totals
+expected_total <- sum(sets$total_cards)
+if (nrow(all_cards) != expected_total) {
+  stop(sprintf("Card count mismatch: got %d, expected %d (sum of sets$total_cards)",
+               nrow(all_cards), expected_total))
+}
+
+# Check all card set_codes exist in sets
+invalid_card_sets <- setdiff(unique(all_cards$set_code), sets$set_code)
+if (length(invalid_card_sets) > 0) {
+  stop("Cards reference unknown sets: ", paste(invalid_card_sets, collapse = ", "))
+}
+
+# Check all rarity_codes per set exist in rarities table
+card_rarity_keys <- unique(paste0(all_cards$set_code, "-", all_cards$rarity_code))
+rarity_keys <- paste0(rarities$set_code, "-", rarities$rarity_code)
+invalid_rarities <- setdiff(card_rarity_keys, rarity_keys)
+if (length(invalid_rarities) > 0) {
+  stop("Cards reference unknown rarities: ", paste(invalid_rarities, collapse = ", "))
+}
+
+cat("  - All validations passed\n")
+
 # --- Step 4: Write Parquet files ---
 cat("\nStep 4: Writing Parquet files to inst/extdata/...\n")
 

@@ -23,6 +23,15 @@
 #' }
 kt_cards <- function(set = NULL, rarity = NULL, character = NULL,
                      faction = NULL) {
+  if (!is.null(set) && !is.character(set))
+    stop("'set' must be a character string, not ", class(set)[1L], call. = FALSE)
+  if (!is.null(rarity) && !is.character(rarity))
+    stop("'rarity' must be a character string, not ", class(rarity)[1L], call. = FALSE)
+  if (!is.null(character) && !is.character(character))
+    stop("'character' must be a character string, not ", class(character)[1L], call. = FALSE)
+  if (!is.null(faction) && !is.character(faction))
+    stop("'faction' must be a character string, not ", class(faction)[1L], call. = FALSE)
+
   con <- kt_connection()
   query <- "SELECT * FROM cards WHERE 1=1"
   params <- list()
@@ -78,6 +87,9 @@ kt_sets <- function() {
 #' kt_rarities(set = "TFEU01")
 #' }
 kt_rarities <- function(set = NULL) {
+  if (!is.null(set) && !is.character(set))
+    stop("'set' must be a character string, not ", class(set)[1L], call. = FALSE)
+
   con <- kt_connection()
   if (is.null(set)) {
     result <- DBI::dbGetQuery(
@@ -108,6 +120,9 @@ kt_rarities <- function(set = NULL) {
 #' kt_characters(faction = "Autobot")
 #' }
 kt_characters <- function(faction = NULL) {
+  if (!is.null(faction) && !is.character(faction))
+    stop("'faction' must be a character string, not ", class(faction)[1L], call. = FALSE)
+
   con <- kt_connection()
   if (is.null(faction)) {
     result <- DBI::dbGetQuery(
@@ -137,6 +152,9 @@ kt_characters <- function(faction = NULL) {
 #' kt_products(set = "TFEU01")
 #' }
 kt_products <- function(set = NULL) {
+  if (!is.null(set) && !is.character(set))
+    stop("'set' must be a character string, not ", class(set)[1L], call. = FALSE)
+
   con <- kt_connection()
   if (is.null(set)) {
     result <- DBI::dbGetQuery(
@@ -173,6 +191,11 @@ kt_products <- function(set = NULL) {
 #' kt_sources(type = "booklet")
 #' }
 kt_sources <- function(set = NULL, type = NULL) {
+  if (!is.null(set) && !is.character(set))
+    stop("'set' must be a character string, not ", class(set)[1L], call. = FALSE)
+  if (!is.null(type) && !is.character(type))
+    stop("'type' must be a character string, not ", class(type)[1L], call. = FALSE)
+
   con <- kt_connection()
   query <- "SELECT * FROM sources WHERE 1=1"
   params <- list()
@@ -246,9 +269,15 @@ kt_tbl <- function(table_name) {
 #' kt_browse(repo_root = "/path/to/kayou_transformers")
 #' }
 kt_browse <- function(repo_root = NULL, port = 3838) {
-  if (!requireNamespace("shiny", quietly = TRUE)) {
-    stop("Package 'shiny' is required for kt_browse(). ",
-         "Install it with install.packages('shiny').", call. = FALSE)
+  required_pkgs <- c("shiny", "bslib", "bsicons", "DT")
+  missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace,
+                                         logical(1), quietly = TRUE)]
+  if (length(missing_pkgs) > 0) {
+    stop("The following packages are required for kt_browse(): ",
+         paste(missing_pkgs, collapse = ", "), ". ",
+         "Install with install.packages(c(",
+         paste0("\"", missing_pkgs, "\"", collapse = ", "), ")).",
+         call. = FALSE)
   }
   old_opt <- getOption("kayoutf.repo_root")
   options(kayoutf.repo_root = repo_root)

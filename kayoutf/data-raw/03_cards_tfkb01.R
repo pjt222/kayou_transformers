@@ -9,6 +9,16 @@ set_code <- "TFKB01"
 
 make_cards <- function(rarity_code, card_count, characters = NA, factions = NA,
                        card_type = "character") {
+  check_len <- function(x, name) {
+    if (!(length(x) == 1L && is.na(x[1L])) && length(x) != card_count) {
+      stop(sprintf("%s-%s: '%s' has length %d, expected %d",
+                   set_code, rarity_code, name, length(x), card_count),
+           call. = FALSE)
+    }
+  }
+  check_len(characters, "characters")
+  check_len(factions, "factions")
+
   tibble(
     card_id = paste0(set_code, "-", rarity_code, "-", sprintf("%03d", seq_len(card_count))),
     set_code = set_code,

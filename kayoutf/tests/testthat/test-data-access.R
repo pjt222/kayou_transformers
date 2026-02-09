@@ -153,3 +153,41 @@ test_that("kt_tbl works with sources table", {
   tbl_result <- kt_tbl("sources")
   expect_s3_class(tbl_result, "tbl_lazy")
 })
+
+# --- Input validation tests ---
+
+test_that("kt_cards rejects non-character set", {
+  expect_error(kt_cards(set = 123), "character string")
+})
+
+test_that("kt_cards rejects non-character rarity", {
+  expect_error(kt_cards(rarity = 1), "character string")
+})
+
+test_that("kt_cards rejects non-character character", {
+  expect_error(kt_cards(character = TRUE), "character string")
+})
+
+test_that("kt_cards rejects non-character faction", {
+  expect_error(kt_cards(faction = 42), "character string")
+})
+
+test_that("kt_rarities rejects non-character set", {
+  expect_error(kt_rarities(set = 1), "character string")
+})
+
+test_that("kt_characters rejects non-character faction", {
+  expect_error(kt_characters(faction = 1), "character string")
+})
+
+test_that("kt_products rejects non-character set", {
+  expect_error(kt_products(set = 1), "character string")
+})
+
+test_that("kt_sources rejects non-character set", {
+  expect_error(kt_sources(set = 1), "character string")
+})
+
+test_that("kt_sources rejects non-character type", {
+  expect_error(kt_sources(type = 1), "character string")
+})

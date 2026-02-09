@@ -34,15 +34,15 @@ make_product_id <- function(set_code, product_suffix) {
 
 #' Find the repository root directory
 #'
-#' Walks up from the current working directory looking for `CLAUDE.md` as a
-#' marker file. Returns `NULL` if not found within 10 levels.
+#' Walks up from the current working directory looking for a `.git` directory
+#' as a marker. Returns `NULL` if not found within 10 levels.
 #'
 #' @return Character path to repo root, or `NULL`.
 #' @keywords internal
 find_repo_root <- function() {
   dir <- getwd()
   for (i in seq_len(10)) {
-    if (file.exists(file.path(dir, "CLAUDE.md"))) {
+    if (dir.exists(file.path(dir, ".git"))) {
       return(dir)
     }
     parent <- dirname(dir)
@@ -66,6 +66,16 @@ load_classification_data <- function(repo_root) {
   if (!file.exists(csv_path)) return(NULL)
 
   classification_data <- utils::read.csv(csv_path, stringsAsFactors = FALSE)
+
+  # Validate expected columns
+  required_cols <- c("filename", "current_directory")
+  missing_cols <- setdiff(required_cols, names(classification_data))
+  if (length(missing_cols) > 0) {
+    warning("classification_results.csv missing columns: ",
+            paste(missing_cols, collapse = ", "), ". Returning NULL.",
+            call. = FALSE)
+    return(NULL)
+  }
 
   # Build portable relative path: {current_directory}/cards/{filename}
   classification_data$image_relative <- file.path(
