@@ -14,7 +14,7 @@ all_products   <- kt_products()
 set_choices    <- sort(unique(all_cards$set_code))
 faction_choices <- sort(unique(all_characters$faction[!is.na(all_characters$faction)]))
 
-# -- Gallery: load classification data and register resource paths -----------------
+# -- Gallery: load all images and register resource paths --------------------------
 repo_root <- getOption("kayoutf.repo_root")
 if (is.null(repo_root)) repo_root <- find_repo_root()
 
@@ -22,31 +22,39 @@ gallery_data <- NULL
 gallery_available <- FALSE
 
 if (!is.null(repo_root)) {
-  gallery_data <- load_classification_data(repo_root)
+  gallery_data <- build_gallery_data(repo_root)
 }
 
 # Fallback: if provided path didn't work (e.g. WSL vs Windows), try auto-detect
 if (is.null(gallery_data)) {
   auto_root <- find_repo_root()
   if (!is.null(auto_root) && !identical(auto_root, repo_root)) {
-    gallery_data <- load_classification_data(auto_root)
+    gallery_data <- build_gallery_data(auto_root)
     if (!is.null(gallery_data)) repo_root <- auto_root
   }
 }
 
 if (!is.null(gallery_data)) {
   gallery_available <- TRUE
-  gallery_sets <- unique(gallery_data$current_directory)
-  for (set_dir in gallery_sets) {
-    cards_path <- file.path(repo_root, set_dir, "cards")
+  gallery_dirs <- unique(gallery_data$directory)
+  for (dir_name in gallery_dirs) {
+    cards_path <- file.path(repo_root, dir_name, "cards")
     if (dir.exists(cards_path)) {
-      shiny::addResourcePath(paste0("gallery-", set_dir), cards_path)
+      shiny::addResourcePath(paste0("gallery-", dir_name), cards_path)
     }
   }
 }
 
 gallery_set_choices <- if (gallery_available) {
-  sort(unique(gallery_data$current_directory))
+  sort(unique(gallery_data$directory))
+} else {
+  character(0)
+}
+
+# Load existing tags for filter choices
+gallery_tag_choices <- if (gallery_available && !is.null(repo_root)) {
+  existing_tags <- load_tags(repo_root)
+  sort(unique(existing_tags$tag))
 } else {
   character(0)
 }
@@ -193,6 +201,37 @@ dark_dt_css <- tags$style(HTML("
     color: #adb5bd;
     margin-left: auto;
   }
+  /* Tag badges on gallery cards */
+  .tag-badge {
+    font-size: 0.65rem;
+    margin: 1px;
+    cursor: default;
+  }
+  /* Tag chips in modal */
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #444;
+    color: #ddd;
+    font-size: 0.8rem;
+    margin: 2px;
+  }
+  .tag-chip .remove-tag {
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  .tag-chip .remove-tag:hover {
+    opacity: 1;
+    color: #e74c3c;
+  }
+  .modal-tag-section {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+  }
 "))
 
 # -- Helper: render a DT with dark-friendly defaults ------------------------------
@@ -234,10 +273,14 @@ build_gallery_ui <- function() {
       selectInput("gallery_set", "Set",
                   choices = c("All" = "", gallery_set_choices),
                   selected = ""),
+      selectInput("gallery_source", "Source",
+                  choices = c("All" = "", "Classified" = "classified",
+                              "Unclassified" = "unclassified"),
+                  selected = ""),
       radioButtons("gallery_type", "Type",
                    choices = c("Cards" = "card", "Non-cards" = "non_card",
                                "All" = "all"),
-                   selected = "card", inline = TRUE),
+                   selected = "all", inline = TRUE),
       selectInput("gallery_rarity", "Rarity",
                   choices = c("All" = ""), selected = ""),
       textInput("gallery_character", "Character search",
@@ -249,6 +292,10 @@ build_gallery_ui <- function() {
                   choices = c("All" = "", "Unreviewed" = "unreviewed",
                               "Correct" = "correct", "Incorrect" = "incorrect"),
                   selected = ""),
+      selectizeInput("gallery_tags", "Tags",
+                     choices = gallery_tag_choices,
+                     selected = NULL, multiple = TRUE,
+                     options = list(placeholder = "Filter by tags...")),
       selectInput("gallery_page_size", "Per page",
                   choices = c("12", "24", "48"),
                   selected = "24"),
@@ -519,6 +566,9 @@ server <- function(input, output, session) {
     }
     feedback_rv <- reactiveVal(feedback_init)
 
+    # Tags reactive: load once at startup, updated on add/remove
+    tags_rv <- reactiveVal(load_tags(repo_root))
+
     # Cascading rarity filter based on gallery set
     observeEvent(input$gallery_set, {
       if (input$gallery_set == "") {
@@ -527,7 +577,7 @@ server <- function(input, output, session) {
                                      gallery_data$rarity_code != ""]
         ))
       } else {
-        subset <- gallery_data[gallery_data$current_directory == input$gallery_set, ]
+        subset <- gallery_data[gallery_data$directory == input$gallery_set, ]
         rarity_options <- sort(unique(
           subset$rarity_code[!is.na(subset$rarity_code) &
                                subset$rarity_code != ""]
@@ -541,11 +591,13 @@ server <- function(input, output, session) {
     # Reset gallery filters
     observeEvent(input$gallery_reset, {
       updateSelectInput(session, "gallery_set", selected = "")
-      updateRadioButtons(session, "gallery_type", selected = "card")
+      updateSelectInput(session, "gallery_source", selected = "")
+      updateRadioButtons(session, "gallery_type", selected = "all")
       updateSelectInput(session, "gallery_rarity", selected = "")
       updateTextInput(session, "gallery_character", value = "")
       updateSelectInput(session, "gallery_confidence", selected = "")
       updateSelectInput(session, "gallery_review", selected = "")
+      updateSelectizeInput(session, "gallery_tags", selected = character(0))
       updateSelectInput(session, "gallery_page_size", selected = "24")
     })
 
@@ -554,12 +606,15 @@ server <- function(input, output, session) {
       data <- gallery_data
 
       if (input$gallery_set != "") {
-        data <- data[data$current_directory == input$gallery_set, ]
+        data <- data[data$directory == input$gallery_set, ]
+      }
+      if (input$gallery_source != "") {
+        data <- data[data$source == input$gallery_source, ]
       }
       if (input$gallery_type == "card") {
-        data <- data[data$is_card == TRUE, ]
+        data <- data[!is.na(data$is_card) & data$is_card == TRUE, ]
       } else if (input$gallery_type == "non_card") {
-        data <- data[data$is_card == FALSE, ]
+        data <- data[!is.na(data$is_card) & data$is_card == FALSE, ]
       }
       if (input$gallery_rarity != "") {
         data <- data[!is.na(data$rarity_code) &
@@ -580,7 +635,7 @@ server <- function(input, output, session) {
       # Review status filter
       if (input$gallery_review != "") {
         fb <- feedback_rv()
-        data$fb_key <- paste0(data$filename, "|", data$current_directory)
+        data$fb_key <- paste0(data$filename, "|", data$directory)
         if (input$gallery_review == "unreviewed") {
           data <- data[!(data$fb_key %in% names(fb)), ]
         } else if (input$gallery_review == "correct") {
@@ -593,14 +648,36 @@ server <- function(input, output, session) {
         data$fb_key <- NULL
       }
 
+      # Tag filter: show only images that have ALL selected tags
+      selected_tags <- input$gallery_tags
+      if (length(selected_tags) > 0) {
+        all_tags <- tags_rv()
+        if (nrow(all_tags) > 0) {
+          data$tag_key <- paste0(data$filename, "|", data$directory)
+          all_tags$tag_key <- paste0(all_tags$filename, "|", all_tags$directory)
+          # For each image, check it has all selected tags
+          keep_keys <- vapply(unique(data$tag_key), function(k) {
+            img_tags <- all_tags$tag[all_tags$tag_key == k]
+            all(selected_tags %in% img_tags)
+          }, logical(1))
+          keep_keys <- names(keep_keys)[keep_keys]
+          data <- data[data$tag_key %in% keep_keys, ]
+          data$tag_key <- NULL
+        } else {
+          # No tags exist, so no images can match
+          data <- data[0, , drop = FALSE]
+        }
+      }
+
       data
     })
 
     # Reset page on filter change
     observeEvent(list(
-      input$gallery_set, input$gallery_type, input$gallery_rarity,
-      input$gallery_character, input$gallery_confidence,
-      input$gallery_review, input$gallery_page_size
+      input$gallery_set, input$gallery_source, input$gallery_type,
+      input$gallery_rarity, input$gallery_character,
+      input$gallery_confidence, input$gallery_review,
+      input$gallery_tags, input$gallery_page_size
     ), {
       gallery_current_page(1)
     })
@@ -640,23 +717,37 @@ server <- function(input, output, session) {
       }
 
       fb <- feedback_rv()
+      all_tags <- tags_rv()
 
       card_elements <- lapply(seq_len(nrow(data)), function(i) {
         row <- data[i, ]
-        img_url <- paste0("gallery-", row$current_directory, "/",
-                          row$filename)
-        fb_key <- paste0(row$filename, "|", row$current_directory)
-        is_card_badge <- if (isTRUE(row$is_card)) {
-          tags$span(class = "badge bg-success gallery-badge", "Card")
+        is_classified <- identical(row$source, "classified")
+        dir_name <- row$directory
+        img_url <- paste0("gallery-", dir_name, "/", row$filename)
+        fb_key <- paste0(row$filename, "|", dir_name)
+
+        # Status badge: classified vs unclassified
+        if (is_classified) {
+          is_card_badge <- if (isTRUE(row$is_card)) {
+            tags$span(class = "badge bg-success gallery-badge", "Card")
+          } else {
+            tags$span(class = "badge bg-secondary gallery-badge", "Non-card")
+          }
         } else {
-          tags$span(class = "badge bg-secondary gallery-badge", "Non-card")
+          is_card_badge <- tags$span(
+            class = "badge bg-dark gallery-badge",
+            style = "border:1px solid #666;",
+            "Unclassified"
+          )
         }
+
         rarity_badge <- if (!is.na(row$rarity_code) &&
                             nzchar(row$rarity_code)) {
           tags$span(class = "badge bg-info gallery-badge ms-1",
                     row$rarity_code)
         }
-        conf_badge <- if (!is.na(row$confidence) && nzchar(row$confidence)) {
+        conf_badge <- if (is_classified && !is.na(row$confidence) &&
+                          nzchar(row$confidence)) {
           conf_class <- switch(row$confidence,
             high   = "bg-success",
             medium = "bg-warning",
@@ -671,56 +762,78 @@ server <- function(input, output, session) {
           tags$p(class = "card-text", row$character_name)
         }
 
-        # Feedback overlay icon
+        # Tag badges
+        img_tags <- if (nrow(all_tags) > 0) {
+          all_tags$tag[all_tags$filename == row$filename &
+                        all_tags$directory == dir_name]
+        } else {
+          character(0)
+        }
+        tag_badges <- if (length(img_tags) > 0) {
+          div(style = "margin-top:2px;",
+            lapply(unique(img_tags), function(t) {
+              tags$span(class = "badge bg-primary tag-badge", t)
+            })
+          )
+        }
+
+        # Feedback overlay icon (classified only)
         feedback_icon <- NULL
-        has_feedback <- fb_key %in% names(fb)
-        if (has_feedback) {
-          if (isTRUE(fb[[fb_key]])) {
-            feedback_icon <- tags$span(class = "feedback-overlay correct",
-                                       HTML("&#10003;"))
-          } else {
-            feedback_icon <- tags$span(class = "feedback-overlay incorrect",
-                                       HTML("&#10007;"))
+        if (is_classified) {
+          has_feedback <- fb_key %in% names(fb)
+          if (has_feedback) {
+            if (isTRUE(fb[[fb_key]])) {
+              feedback_icon <- tags$span(class = "feedback-overlay correct",
+                                         HTML("&#10003;"))
+            } else {
+              feedback_icon <- tags$span(class = "feedback-overlay incorrect",
+                                         HTML("&#10007;"))
+            }
           }
         }
 
-        # Feedback buttons (thumbs-up / thumbs-down)
-        up_active <- if (has_feedback && isTRUE(fb[[fb_key]])) " active" else ""
-        down_active <- if (has_feedback && !isTRUE(fb[[fb_key]])) " active" else ""
-
         # Escape single quotes in filename for JS
         safe_filename <- gsub("'", "\\\\'", row$filename)
-        safe_dir <- gsub("'", "\\\\'", row$current_directory)
+        safe_dir <- gsub("'", "\\\\'", dir_name)
 
-        feedback_buttons <- div(
-          style = "display:inline-flex; gap:2px; margin-top:4px;",
-          tags$button(
-            class = paste0("feedback-btn correct", up_active),
-            title = "Correct",
-            onclick = sprintf(
-              "event.stopPropagation(); Shiny.setInputValue('gallery_feedback', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
-              safe_filename, safe_dir
+        # Feedback buttons only for classified images
+        feedback_buttons <- NULL
+        if (is_classified) {
+          has_feedback <- fb_key %in% names(fb)
+          up_active <- if (has_feedback && isTRUE(fb[[fb_key]])) " active" else ""
+          down_active <- if (has_feedback && !isTRUE(fb[[fb_key]])) " active" else ""
+
+          feedback_buttons <- div(
+            style = "display:inline-flex; gap:2px; margin-top:4px;",
+            tags$button(
+              class = paste0("feedback-btn correct", up_active),
+              title = "Correct",
+              onclick = sprintf(
+                "event.stopPropagation(); Shiny.setInputValue('gallery_feedback', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
+                safe_filename, safe_dir
+              ),
+              HTML("&#9650;")
             ),
-            HTML("&#9650;")
-          ),
-          tags$button(
-            class = paste0("feedback-btn incorrect", down_active),
-            title = "Incorrect",
-            onclick = sprintf(
-              "event.stopPropagation(); Shiny.setInputValue('gallery_feedback', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
-              safe_filename, safe_dir
-            ),
-            HTML("&#9660;")
+            tags$button(
+              class = paste0("feedback-btn incorrect", down_active),
+              title = "Incorrect",
+              onclick = sprintf(
+                "event.stopPropagation(); Shiny.setInputValue('gallery_feedback', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
+                safe_filename, safe_dir
+              ),
+              HTML("&#9660;")
+            )
           )
-        )
+        }
 
         div(
           class = "col",
           div(
             class = "gallery-card",
             onclick = sprintf(
-              "Shiny.setInputValue('gallery_click', {url:'%s', filename:'%s', dir:'%s'}, {priority:'event'})",
-              img_url, safe_filename, safe_dir
+              "Shiny.setInputValue('gallery_click', {url:'%s', filename:'%s', dir:'%s', source:'%s'}, {priority:'event'})",
+              img_url, safe_filename, safe_dir,
+              if (is_classified) "classified" else "unclassified"
             ),
             feedback_icon,
             tags$img(
@@ -732,6 +845,7 @@ server <- function(input, output, session) {
               class = "card-body",
               div(is_card_badge, rarity_badge, conf_badge),
               char_name,
+              tag_badges,
               tags$p(
                 class = "card-text",
                 style = "font-size:0.65rem; color:#888;",
@@ -851,72 +965,135 @@ server <- function(input, output, session) {
       do.call(tagList, buttons)
     })
 
-    # Click-to-enlarge modal with feedback
+    # Click-to-enlarge modal with feedback and tags
     observeEvent(input$gallery_click, {
       click_data <- input$gallery_click
       img_url <- click_data$url
       click_filename <- click_data$filename
       click_dir <- click_data$dir
+      is_classified <- identical(click_data$source, "classified")
       fb_key <- paste0(click_filename, "|", click_dir)
 
-      # Look up classification details
+      # Look up details
       match_row <- gallery_data[gallery_data$filename == click_filename &
-                                  gallery_data$current_directory == click_dir, ]
+                                  gallery_data$directory == click_dir, ]
 
       detail_tags <- if (nrow(match_row) > 0) {
         r <- match_row[1, ]
         tagList(
           tags$div(
             style = "margin-top:10px; font-size:0.85rem; color:#adb5bd;",
-            tags$span(tags$strong("Set: "), r$current_directory, " | "),
+            tags$span(tags$strong("Set: "), r$directory, " | "),
             if (!is.na(r$rarity_code) && nzchar(r$rarity_code))
               tags$span(tags$strong("Rarity: "), r$rarity_code, " | "),
             if (!is.na(r$character_name) && nzchar(r$character_name))
               tags$span(tags$strong("Character: "), r$character_name, " | "),
-            if (!is.na(r$confidence) && nzchar(r$confidence))
+            if (is_classified && !is.na(r$confidence) && nzchar(r$confidence))
               tags$span(tags$strong("Confidence: "), r$confidence)
           )
         )
       }
 
-      # Current feedback status
-      fb <- feedback_rv()
-      has_fb <- fb_key %in% names(fb)
-      status_label <- if (has_fb) {
-        if (isTRUE(fb[[fb_key]])) {
-          tags$span(class = "feedback-status-label",
-                    HTML("&#10003; Marked correct"))
-        } else {
-          tags$span(class = "feedback-status-label",
-                    HTML("&#10007; Marked incorrect"))
-        }
-      }
-
-      correct_class <- if (has_fb && isTRUE(fb[[fb_key]])) " active-correct" else ""
-      incorrect_class <- if (has_fb && !isTRUE(fb[[fb_key]])) " active-incorrect" else ""
-
       safe_fn <- gsub("'", "\\\\'", click_filename)
       safe_d <- gsub("'", "\\\\'", click_dir)
 
-      feedback_ui <- div(
-        class = "modal-feedback-section",
-        tags$button(
-          class = paste0("modal-feedback-btn", correct_class),
-          onclick = sprintf(
-            "Shiny.setInputValue('modal_feedback', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
-            safe_fn, safe_d
+      # Feedback UI — only for classified images
+      feedback_ui <- NULL
+      if (is_classified) {
+        fb <- feedback_rv()
+        has_fb <- fb_key %in% names(fb)
+        status_label <- if (has_fb) {
+          if (isTRUE(fb[[fb_key]])) {
+            tags$span(class = "feedback-status-label",
+                      HTML("&#10003; Marked correct"))
+          } else {
+            tags$span(class = "feedback-status-label",
+                      HTML("&#10007; Marked incorrect"))
+          }
+        }
+
+        correct_class <- if (has_fb && isTRUE(fb[[fb_key]])) " active-correct" else ""
+        incorrect_class <- if (has_fb && !isTRUE(fb[[fb_key]])) " active-incorrect" else ""
+
+        feedback_ui <- div(
+          class = "modal-feedback-section",
+          tags$button(
+            class = paste0("modal-feedback-btn", correct_class),
+            onclick = sprintf(
+              "Shiny.setInputValue('modal_feedback', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
+              safe_fn, safe_d
+            ),
+            HTML("&#10003; Correct")
           ),
-          HTML("&#10003; Correct")
-        ),
-        tags$button(
-          class = paste0("modal-feedback-btn", incorrect_class),
-          onclick = sprintf(
-            "Shiny.setInputValue('modal_feedback', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
-            safe_fn, safe_d
+          tags$button(
+            class = paste0("modal-feedback-btn", incorrect_class),
+            onclick = sprintf(
+              "Shiny.setInputValue('modal_feedback', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
+              safe_fn, safe_d
+            ),
+            HTML("&#10007; Incorrect")
           ),
-          HTML("&#10007; Incorrect")
-        ),
-        status_label
+          status_label
+        )
+      }
+
+      # Tag management section
+      all_tags <- tags_rv()
+      img_tags <- if (nrow(all_tags) > 0) {
+        unique(all_tags$tag[all_tags$filename == click_filename &
+                             all_tags$directory == click_dir])
+      } else {
+        character(0)
+      }
+
+      # Existing tags as removable chips
+      tag_chips <- if (length(img_tags) > 0) {
+        lapply(img_tags, function(t) {
+          safe_tag <- gsub("'", "\\\\'", t)
+          tags$span(
+            class = "tag-chip",
+            t,
+            tags$span(
+              class = "remove-tag",
+              onclick = sprintf(
+                "Shiny.setInputValue('remove_tag', {filename:'%s', dir:'%s', tag:'%s'}, {priority:'event'})",
+                safe_fn, safe_d, safe_tag
+              ),
+              HTML("&times;")
+            )
+          )
+        })
+      }
+
+      # All existing tag names for suggestions
+      all_tag_names <- sort(unique(all_tags$tag))
+
+      tag_ui <- div(
+        class = "modal-tag-section",
+        tags$strong("Tags", style = "color:#adb5bd; font-size:0.85rem;"),
+        div(style = "margin:6px 0;", tag_chips),
+        div(
+          style = "display:flex; gap:6px; align-items:center;",
+          tags$input(
+            id = "modal_tag_input", type = "text",
+            class = "form-control form-control-sm",
+            style = "max-width:200px; background:#303030; color:#ddd; border-color:#555;",
+            placeholder = "Add tag...",
+            list = "tag_suggestions"
+          ),
+          tags$datalist(
+            id = "tag_suggestions",
+            lapply(all_tag_names, function(t) tags$option(value = t))
+          ),
+          tags$button(
+            class = "btn btn-sm btn-outline-primary",
+            onclick = sprintf(
+              "var v=document.getElementById('modal_tag_input').value.trim(); if(v){Shiny.setInputValue('add_tag', {filename:'%s', dir:'%s', tag:v}, {priority:'event'}); document.getElementById('modal_tag_input').value='';}",
+              safe_fn, safe_d
+            ),
+            "Add"
+          )
+        )
       )
 
       showModal(modalDialog(
@@ -926,6 +1103,7 @@ server <- function(input, output, session) {
         ),
         detail_tags,
         feedback_ui,
+        tag_ui,
         size = "l",
         easyClose = TRUE,
         footer = modalButton("Close")
@@ -936,7 +1114,6 @@ server <- function(input, output, session) {
     observeEvent(input$gallery_feedback, {
       fb_data <- input$gallery_feedback
       save_feedback(repo_root, fb_data$filename, fb_data$dir, fb_data$is_correct)
-      # Update in-memory reactive
       fb <- feedback_rv()
       key <- paste0(fb_data$filename, "|", fb_data$dir)
       fb[[key]] <- fb_data$is_correct
@@ -947,12 +1124,33 @@ server <- function(input, output, session) {
     observeEvent(input$modal_feedback, {
       fb_data <- input$modal_feedback
       save_feedback(repo_root, fb_data$filename, fb_data$dir, fb_data$is_correct)
-      # Update in-memory reactive
       fb <- feedback_rv()
       key <- paste0(fb_data$filename, "|", fb_data$dir)
       fb[[key]] <- fb_data$is_correct
       feedback_rv(fb)
-      # Close and re-open modal to refresh status
+      removeModal()
+    })
+
+    # Tag add handler
+    observeEvent(input$add_tag, {
+      tag_data <- input$add_tag
+      save_tag(repo_root, tag_data$filename, tag_data$dir, tag_data$tag)
+      tags_rv(load_tags(repo_root))
+      # Update sidebar tag filter choices
+      updateSelectizeInput(session, "gallery_tags",
+                           choices = sort(unique(tags_rv()$tag)),
+                           selected = input$gallery_tags)
+      removeModal()
+    })
+
+    # Tag remove handler
+    observeEvent(input$remove_tag, {
+      tag_data <- input$remove_tag
+      remove_tag(repo_root, tag_data$filename, tag_data$dir, tag_data$tag)
+      tags_rv(load_tags(repo_root))
+      updateSelectizeInput(session, "gallery_tags",
+                           choices = sort(unique(tags_rv()$tag)),
+                           selected = input$gallery_tags)
       removeModal()
     })
   }
