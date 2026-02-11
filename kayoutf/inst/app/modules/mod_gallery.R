@@ -22,6 +22,12 @@ mod_gallery_ui <- function(id, gallery_available, gallery_set_choices,
     )
   }
 
+  tagList(
+  tags$a(
+    href = paste0("#", ns("gallery_content")),
+    class = "skip-link",
+    "Skip to gallery images"
+  ),
   layout_sidebar(
     sidebar = sidebar(
       title = "Filters",
@@ -59,14 +65,18 @@ mod_gallery_ui <- function(id, gallery_available, gallery_set_choices,
                    class = "btn-outline-secondary btn-sm mt-2")
     ),
     div(
+      id = ns("gallery_content"),
       class = "mb-3",
       textOutput(ns("count"), inline = TRUE)
     ),
     uiOutput(ns("grid")),
     div(
       class = "gallery-pagination d-flex justify-content-center mt-3 mb-3",
+      role = "navigation",
+      `aria-label` = "Gallery pagination",
       uiOutput(ns("pagination"))
     )
+  )
   )
 }
 
@@ -328,9 +338,12 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
 
           feedback_buttons <- div(
             style = "display:inline-flex; gap:2px; margin-top:4px;",
+            role = "group",
+            `aria-label` = "Classification feedback",
             tags$button(
               class = paste0("feedback-btn correct", up_active),
-              title = "Correct",
+              title = "Mark as correctly classified",
+              `aria-label` = "Mark as correctly classified",
               onclick = sprintf(
                 "event.stopPropagation(); Shiny.setInputValue('%s', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
                 ns("gallery_feedback"), safe_filename, safe_dir
@@ -339,7 +352,8 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
             ),
             tags$button(
               class = paste0("feedback-btn incorrect", down_active),
-              title = "Incorrect",
+              title = "Mark as incorrectly classified",
+              `aria-label` = "Mark as incorrectly classified",
               onclick = sprintf(
                 "event.stopPropagation(); Shiny.setInputValue('%s', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
                 ns("gallery_feedback"), safe_filename, safe_dir
@@ -349,20 +363,36 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
           )
         }
 
+        # Build descriptive alt text and aria-label
+        alt_parts <- row$filename
+        if (!is.na(row$character_name) && nzchar(row$character_name)) {
+          alt_parts <- paste0(row$character_name, " - ", row$filename)
+        }
+        aria_label <- paste0("View ", alt_parts)
+
+        click_js <- sprintf(
+          "Shiny.setInputValue('%s', {url:'%s', filename:'%s', dir:'%s', source:'%s'}, {priority:'event'})",
+          ns("click"), img_url, safe_filename, safe_dir,
+          if (is_classified) "classified" else "unclassified"
+        )
+
         div(
           class = "col",
           div(
             class = "gallery-card",
-            onclick = sprintf(
-              "Shiny.setInputValue('%s', {url:'%s', filename:'%s', dir:'%s', source:'%s'}, {priority:'event'})",
-              ns("click"), img_url, safe_filename, safe_dir,
-              if (is_classified) "classified" else "unclassified"
+            tabindex = "0",
+            role = "button",
+            `aria-label` = aria_label,
+            onclick = click_js,
+            onkeydown = sprintf(
+              "if(event.key==='Enter'||event.key===' '){event.preventDefault();%s}",
+              click_js
             ),
             feedback_icon,
             tags$img(
               src = img_url,
               loading = "lazy",
-              alt = row$filename
+              alt = alt_parts
             ),
             div(
               class = "card-body",
@@ -541,8 +571,11 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
 
         feedback_ui <- div(
           class = "modal-feedback-section",
+          role = "group",
+          `aria-label` = "Classification feedback",
           tags$button(
             class = paste0("modal-feedback-btn", correct_class),
+            `aria-label` = "Mark classification as correct",
             onclick = sprintf(
               "Shiny.setInputValue('%s', {filename:'%s', dir:'%s', is_correct:true}, {priority:'event'})",
               ns("modal_feedback"), safe_fn, safe_d
@@ -551,6 +584,7 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
           ),
           tags$button(
             class = paste0("modal-feedback-btn", incorrect_class),
+            `aria-label` = "Mark classification as incorrect",
             onclick = sprintf(
               "Shiny.setInputValue('%s', {filename:'%s', dir:'%s', is_correct:false}, {priority:'event'})",
               ns("modal_feedback"), safe_fn, safe_d
@@ -578,8 +612,15 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
             t,
             tags$span(
               class = "remove-tag",
+              role = "button",
+              tabindex = "0",
+              `aria-label` = paste0("Remove tag: ", t),
               onclick = sprintf(
                 "Shiny.setInputValue('%s', {filename:'%s', dir:'%s', tag:'%s'}, {priority:'event'})",
+                ns("remove_tag"), safe_fn, safe_d, safe_tag
+              ),
+              onkeydown = sprintf(
+                "if(event.key==='Enter'){Shiny.setInputValue('%s', {filename:'%s', dir:'%s', tag:'%s'}, {priority:'event'})}",
                 ns("remove_tag"), safe_fn, safe_d, safe_tag
               ),
               HTML("&times;")
@@ -604,6 +645,7 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
             class = "form-control form-control-sm",
             style = "max-width:200px; background:#303030; color:#ddd; border-color:#555;",
             placeholder = "Add tag...",
+            `aria-label` = "Add a tag to this image",
             list = ns("tag_suggestions")
           ),
           tags$datalist(
@@ -621,10 +663,20 @@ mod_gallery_server <- function(id, gallery_data, gallery_available,
         )
       )
 
+      # Build descriptive alt text for modal image
+      modal_alt <- click_filename
+      if (nrow(match_row) > 0) {
+        r <- match_row[1, ]
+        if (!is.na(r$character_name) && nzchar(r$character_name)) {
+          modal_alt <- paste0(r$character_name, " - ", click_filename)
+        }
+      }
+
       showModal(modalDialog(
         tags$img(
           src = img_url,
-          class = "modal-gallery-img"
+          class = "modal-gallery-img",
+          alt = modal_alt
         ),
         detail_tags,
         feedback_ui,

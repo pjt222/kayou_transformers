@@ -232,6 +232,32 @@ dark_dt_css <- tags$style(HTML("
     padding-top: 10px;
     border-top: 1px solid #444;
   }
+  /* Skip link for keyboard navigation */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 10px;
+    z-index: 9999;
+    padding: 8px 16px;
+    background: #375a7f;
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  .skip-link:focus {
+    top: 10px;
+  }
+  /* Focus styles for keyboard navigation */
+  .gallery-card:focus-visible {
+    outline: 2px solid #375a7f;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(55, 90, 127, 0.3);
+  }
+  .remove-tag:focus-visible {
+    outline: 2px solid #375a7f;
+    border-radius: 50%;
+  }
 "))
 
 # -- UI ---------------------------------------------------------------------------
