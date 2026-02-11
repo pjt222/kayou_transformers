@@ -14,7 +14,8 @@ xr_cards <- make_cards(
   set_code, "XR", 4,
   character_name = c("Optimus Prime", "Megatron", NA_character_, NA_character_),
   faction = c("Autobot", "Decepticon", NA_character_, NA_character_),
-  print_run = c(399L, 399L, 699L, 699L)
+  print_run = c(399L, 399L, 699L, 699L),
+  data_confidence = "inferred"
 )
 
 # --- SHR: Super Holographic Rare (6 cards) ---
@@ -23,11 +24,13 @@ xr_cards <- make_cards(
 shr_chars <- c(NA_character_, NA_character_, "Elita-1", rep(NA_character_, 3))
 shr_factions <- c(NA_character_, NA_character_, "Autobot", rep(NA_character_, 3))
 shr_cards <- make_cards(set_code, "SHR", 6, character_name = shr_chars, faction = shr_factions,
-                        card_type = "lenticular")
+                        card_type = "lenticular",
+                        data_confidence = "inferred")
 
 # --- UR-S: Ultra Rare Star (10 cards) ---
 # Fancier bot and alt mode presentations
-ur_s_cards <- make_cards(set_code, "UR-S", 10)
+ur_s_cards <- make_cards(set_code, "UR-S", 10,
+                       data_confidence = "inferred")
 
 # --- UR: Ultra Rare (17 cards) ---
 # Confirmed: UR-005 = Chromia, UR-012 = Alpha Trion, UR-013 = Starscream, UR-015 = Soundwave
@@ -37,21 +40,25 @@ ur_chars <- c(rep(NA_character_, 4), "Chromia", rep(NA_character_, 6),
 ur_factions <- c(rep(NA_character_, 4), "Autobot", rep(NA_character_, 6),
                  "Autobot", "Decepticon", NA_character_, "Decepticon",
                  rep(NA_character_, 2))
-ur_cards <- make_cards(set_code, "UR", 17, character_name = ur_chars, faction = ur_factions)
+ur_cards <- make_cards(set_code, "UR", 17, character_name = ur_chars, faction = ur_factions,
+                       data_confidence = "inferred")
 
 # --- HR: Holographic Rare (19 cards) ---
-hr_cards <- make_cards(set_code, "HR", 19, card_type = "lenticular")
+hr_cards <- make_cards(set_code, "HR", 19, card_type = "lenticular",
+                       data_confidence = "inferred")
 
 # --- SSR: Super Special Rare (35 cards) ---
 # Dynamic bot mode pose cards
 # Confirmed: TFO01-SSR-030 = Silver Tracker
 ssr_chars <- c(rep(NA_character_, 29), "Silver Tracker", rep(NA_character_, 5))
 ssr_factions <- c(rep(NA_character_, 29), "Autobot", rep(NA_character_, 5))
-ssr_cards <- make_cards(set_code, "SSR", 35, character_name = ssr_chars, faction = ssr_factions)
+ssr_cards <- make_cards(set_code, "SSR", 35, character_name = ssr_chars, faction = ssr_factions,
+                       data_confidence = "inferred")
 
 # --- SR: Super Rare (45 cards) ---
 # Static bot mode pose cards
-sr_cards <- make_cards(set_code, "SR", 45)
+sr_cards <- make_cards(set_code, "SR", 45,
+                       data_confidence = "inferred")
 
 # --- TP: The Primes (13 cards) ---
 # All 13 Primes with big-screen designs
@@ -71,7 +78,8 @@ tp_cards <- make_cards(
     "Prime", "Prime", "Prime",
     NA_character_, NA_character_
   ),
-  card_type = "prime"
+  card_type = "prime",
+  data_confidence = "confirmed"
 )
 
 tfo01_cards <- dplyr::bind_rows(

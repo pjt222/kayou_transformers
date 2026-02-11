@@ -75,7 +75,8 @@ cat("\nStep 3b: Validating combined data...\n")
 expected_card_cols <- c("card_id", "set_code", "rarity_code", "card_number",
                         "card_name_en", "card_name_zh", "character_name",
                         "faction", "card_type", "is_parallel",
-                        "product_exclusive", "print_run", "notes")
+                        "product_exclusive", "print_run", "notes",
+                        "data_confidence")
 missing_cols <- setdiff(expected_card_cols, names(all_cards))
 if (length(missing_cols) > 0) {
   stop("Cards missing columns: ", paste(missing_cols, collapse = ", "))
@@ -106,6 +107,41 @@ rarity_keys <- paste0(rarities$set_code, "-", rarities$rarity_code)
 invalid_rarities <- setdiff(card_rarity_keys, rarity_keys)
 if (length(invalid_rarities) > 0) {
   stop("Cards reference unknown rarities: ", paste(invalid_rarities, collapse = ", "))
+}
+
+# Validate column types
+expected_types <- list(
+  card_id = "character", set_code = "character", rarity_code = "character",
+  card_number = "character", card_name_en = "character", card_name_zh = "character",
+  character_name = "character", faction = "character", card_type = "character",
+  is_parallel = "logical", product_exclusive = "character", print_run = "integer",
+  notes = "character", data_confidence = "character"
+)
+for (col_name in names(expected_types)) {
+  actual <- class(all_cards[[col_name]])[1L]
+  expected <- expected_types[[col_name]]
+  if (actual != expected) {
+    stop(sprintf("Column '%s' has type '%s', expected '%s'", col_name, actual, expected))
+  }
+}
+
+# Validate data_confidence values
+valid_conf <- c("confirmed", "inferred", "placeholder")
+bad_conf <- setdiff(unique(all_cards$data_confidence), valid_conf)
+if (length(bad_conf) > 0) {
+  stop("Invalid data_confidence values: ", paste(bad_conf, collapse = ", "))
+}
+
+# Cross-check rarity card counts
+for (i in seq_len(nrow(rarities))) {
+  set_cd <- rarities$set_code[i]
+  rar_cd <- rarities$rarity_code[i]
+  expected_n <- rarities$card_count[i]
+  actual_n <- sum(all_cards$set_code == set_cd & all_cards$rarity_code == rar_cd)
+  if (actual_n != expected_n) {
+    stop(sprintf("Rarity %s-%s declares %d cards but found %d in cards table",
+                 set_cd, rar_cd, expected_n, actual_n))
+  }
 }
 
 cat("  - All validations passed\n")

@@ -12,13 +12,16 @@ set_code <- "TFKB01"
 ar_chars <- c(rep(NA_character_, 4), "Megatron", rep(NA_character_, 3))
 ar_factions <- c(rep(NA_character_, 4), "Decepticon", rep(NA_character_, 3))
 ar_cards <- make_cards(set_code, "AR", 8, character_name = ar_chars, faction = ar_factions,
-                       card_type = "augmented_reality")
+                       card_type = "augmented_reality",
+                       data_confidence = "placeholder")
 
 # --- HR: Holographic Rare (20 cards) ---
-hr_cards <- make_cards(set_code, "HR", 20, card_type = "lenticular")
+hr_cards <- make_cards(set_code, "HR", 20, card_type = "lenticular",
+                       data_confidence = "placeholder")
 
 # --- SR: Super Rare (20 cards) ---
-sr_cards <- make_cards(set_code, "SR", 20)
+sr_cards <- make_cards(set_code, "SR", 20,
+                       data_confidence = "placeholder")
 
 tfkb01_cards <- dplyr::bind_rows(ar_cards, hr_cards, sr_cards)
 saveRDS(tfkb01_cards, "data-raw/sources/tfkb01_cards.rds")

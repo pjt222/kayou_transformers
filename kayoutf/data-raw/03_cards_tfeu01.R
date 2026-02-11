@@ -19,7 +19,8 @@ bp_cards <- make_cards(
   faction = c("Autobot", "Decepticon", "Decepticon",
               "Autobot", "Autobot"),
   card_type = "character",
-  product_exclusive = rep("TFEU01-super", 5)
+  product_exclusive = rep("TFEU01-super", 5),
+  data_confidence = "confirmed"
 )
 
 # --- XR-DG: Dark Gold XR (9 cards) ---
@@ -40,7 +41,8 @@ xr_dg_cards <- make_cards(
               "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot"),
   is_parallel = TRUE,
   product_exclusive = rep("TFEU01-super", 9),
-  print_run = rep(9L, 9)
+  print_run = rep(9L, 9),
+  data_confidence = "confirmed"
 )
 
 # --- XR-RD: Red XR (4 cards) ---
@@ -54,7 +56,8 @@ xr_rd_cards <- make_cards(
   character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave"),
   faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon"),
   is_parallel = TRUE,
-  print_run = rep(4L, 4)
+  print_run = rep(4L, 4),
+  data_confidence = "confirmed"
 )
 
 # --- XR: Standard XR (9 cards) ---
@@ -68,7 +71,8 @@ xr_cards <- make_cards(
   character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
                      "Grimlock", "Shockwave", "Bumblebee", "Jazz", "Elita One"),
   faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
-              "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot")
+              "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot"),
+  data_confidence = "confirmed"
 )
 
 # --- OR-S: Assembly Star (8 cards, limited 380 copies) ---
@@ -87,7 +91,8 @@ or_s_cards <- make_cards(
               "Autobot", "Autobot", "Decepticon", "Autobot"),
   card_type = "scene",
   is_parallel = TRUE,
-  print_run = rep(380L, 8)
+  print_run = rep(380L, 8),
+  data_confidence = "confirmed"
 )
 
 # --- OR: Assembly (8 cards) ---
@@ -105,7 +110,8 @@ or_cards <- make_cards(
                      "Grimlock", "Bumblebee", "Shockwave", "Jazz"),
   faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
               "Autobot", "Autobot", "Decepticon", "Autobot"),
-  card_type = "scene"
+  card_type = "scene",
+  data_confidence = "confirmed"
 )
 
 # --- WR: War (6 cards) ---
@@ -122,7 +128,8 @@ wr_cards <- make_cards(
                      "Soundwave", "Optimus Prime", "Grimlock"),
   faction = c("Autobot", "Decepticon", "Autobot",
               "Decepticon", "Autobot", "Autobot"),
-  card_type = "scene"
+  card_type = "scene",
+  data_confidence = "confirmed"
 )
 
 # --- LR-S: Heroes Star (12 cards) ---
@@ -142,7 +149,8 @@ lr_s_cards <- make_cards(
               "Decepticon", "Autobot", "Autobot", "Autobot",
               "Autobot", "Decepticon", "Autobot", "Autobot"),
   is_parallel = TRUE,
-  print_run = lr_s_print_runs
+  print_run = lr_s_print_runs,
+  data_confidence = "confirmed"
 )
 
 # --- LR: Heroes (12 cards) ---
@@ -157,7 +165,8 @@ lr_cards <- make_cards(
                      "Ratchet", "Shockwave", "Arcee", "Elita One"),
   faction = c("Autobot", "Decepticon", "Autobot", "Decepticon",
               "Decepticon", "Autobot", "Autobot", "Autobot",
-              "Autobot", "Decepticon", "Autobot", "Autobot")
+              "Autobot", "Decepticon", "Autobot", "Autobot"),
+  data_confidence = "confirmed"
 )
 
 # --- UR-S: Cover Variant Star (20 cards) ---
@@ -180,7 +189,8 @@ ur_s_cards <- make_cards(
   character_name = ur_s_characters,
   faction = ur_s_factions,
   card_type = "cover_variant",
-  is_parallel = TRUE
+  is_parallel = TRUE,
+  data_confidence = "confirmed"
 )
 
 # --- UR: Cover Variant (20 cards) ---
@@ -189,7 +199,8 @@ ur_cards <- make_cards(
   card_name_en = paste0(ur_s_characters, " Cover Variant"),
   character_name = ur_s_characters,
   faction = ur_s_factions,
-  card_type = "cover_variant"
+  card_type = "cover_variant",
+  data_confidence = "confirmed"
 )
 
 # --- SR: Montage (36 cards) ---
@@ -220,7 +231,8 @@ sr_cards <- make_cards(
   card_name_en = paste0("Montage ", sprintf("%03d", 1:36)),
   character_name = sr_characters,
   faction = sr_factions,
-  card_type = "scene"
+  card_type = "scene",
+  data_confidence = "confirmed"
 )
 
 # --- SSR: Comic Breakout (20 cards) ---
@@ -241,7 +253,8 @@ ssr_cards <- make_cards(
   card_name_en = paste0(ssr_characters, " Comic Breakout"),
   character_name = ssr_characters,
   faction = ssr_factions,
-  card_type = "comic_panel"
+  card_type = "comic_panel",
+  data_confidence = "confirmed"
 )
 
 # --- HR: 3D Faction (3 cards, die-cut) ---
@@ -254,7 +267,8 @@ hr_cards <- make_cards(
   faction = c("Autobot", "Decepticon", "Autobot"),
   card_type = "die_cut",
   notes = c("Faction emblem die-cut card", "Faction emblem die-cut card",
-            "Dinobot sub-faction emblem die-cut card")
+            "Dinobot sub-faction emblem die-cut card"),
+  data_confidence = "confirmed"
 )
 
 # --- AR: Portrait (3 cards) ---
@@ -270,7 +284,8 @@ ar_cards <- make_cards(
   card_type = "portrait",
   notes = c("Physical card printed as AR-001",
             "Physical card printed as AR-009 (non-sequential)",
-            "Physical card number unconfirmed")
+            "Physical card number unconfirmed"),
+  data_confidence = "confirmed"
 )
 
 # --- RD: Redemption cards ---
@@ -284,7 +299,8 @@ rd_cards <- make_cards(
     paste0("Binder Redemption ", sprintf("%02d", 1:4)),
     paste0("Puzzle Set Redemption ", sprintf("%02d", 1:3))
   ),
-  card_type = c(rep("puzzle", 72), rep("redemption", 4), rep("redemption", 3))
+  card_type = c(rep("puzzle", 72), rep("redemption", 4), rep("redemption", 3)),
+  data_confidence = "inferred"
 )
 
 # Combine all TFEU01 cards

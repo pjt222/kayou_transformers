@@ -11,7 +11,8 @@ test_that("kt_cards returns tibble with expected columns", {
   result <- kt_cards()
   expect_s3_class(result, "tbl_df")
   expected_cols <- c("card_id", "set_code", "rarity_code", "card_number",
-                     "card_name_en", "character_name", "faction", "card_type")
+                     "card_name_en", "character_name", "faction", "card_type",
+                     "data_confidence")
   for (col in expected_cols) {
     expect_true(col %in% names(result), info = paste("Missing column:", col))
   }
@@ -214,4 +215,24 @@ test_that("kt_sources rejects non-character set", {
 
 test_that("kt_sources rejects non-character type", {
   expect_error(kt_sources(type = 1), "character string")
+})
+
+# --- data_confidence column ---
+
+test_that("all cards have valid data_confidence values", {
+  result <- kt_cards()
+  expect_true("data_confidence" %in% names(result))
+  valid_values <- c("confirmed", "inferred", "placeholder")
+  expect_true(all(result$data_confidence %in% valid_values))
+})
+
+test_that("TFEU01 cards are mostly confirmed", {
+  result <- kt_cards(set = "TFEU01")
+  confirmed <- sum(result$data_confidence == "confirmed")
+  expect_gt(confirmed, 150)
+})
+
+test_that("TFKB01 cards are placeholder", {
+  result <- kt_cards(set = "TFKB01")
+  expect_true(all(result$data_confidence == "placeholder"))
 })

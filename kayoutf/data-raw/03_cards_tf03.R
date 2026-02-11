@@ -8,26 +8,32 @@ source("data-raw/00_helpers.R")
 set_code <- "TF03"
 
 # --- SE: Special Edition (3 cards, limited 99 copies each) ---
-se_cards <- make_cards(set_code, "SE", 3, print_run = rep(99L, 3))
+se_cards <- make_cards(set_code, "SE", 3, print_run = rep(99L, 3),
+                       data_confidence = "inferred")
 
 # --- BP: Box-Pull (6 cards) ---
-bp_cards <- make_cards(set_code, "BP", 6, card_type = "augmented_reality")
+bp_cards <- make_cards(set_code, "BP", 6, card_type = "augmented_reality",
+                       data_confidence = "inferred")
 
 # --- LR: Limited Rare (7 cards) ---
-lr_cards <- make_cards(set_code, "LR", 7)
+lr_cards <- make_cards(set_code, "LR", 7,
+                       data_confidence = "inferred")
 
 # --- AR: Augmented Reality (9 cards) ---
 # Confirmed: TF03-AR-003 = Hot Rod
 ar_chars <- c(NA_character_, NA_character_, "Hot Rod", rep(NA_character_, 6))
 ar_factions <- c(NA_character_, NA_character_, "Autobot", rep(NA_character_, 6))
 ar_cards <- make_cards(set_code, "AR", 9, character_name = ar_chars, faction = ar_factions,
-                       card_type = "augmented_reality")
+                       card_type = "augmented_reality",
+                       data_confidence = "inferred")
 
 # --- UR: Ultra Rare (8 cards) ---
-ur_cards <- make_cards(set_code, "UR", 8)
+ur_cards <- make_cards(set_code, "UR", 8,
+                       data_confidence = "inferred")
 
 # --- SHR: Super Holographic Rare (3 cards) ---
-shr_cards <- make_cards(set_code, "SHR", 3, card_type = "lenticular")
+shr_cards <- make_cards(set_code, "SHR", 3, card_type = "lenticular",
+                       data_confidence = "inferred")
 
 # --- SSR: Super Special Rare (16 cards) - FULLY CONFIRMED ---
 ssr_cards <- make_cards(
@@ -43,7 +49,8 @@ ssr_cards <- make_cards(
     "Autobot", "Decepticon", "Decepticon", "Decepticon",
     "Decepticon", "Decepticon", "Autobot", "Autobot",
     "Autobot", "Autobot", "Autobot", "Autobot"
-  )
+  ),
+  data_confidence = "confirmed"
 )
 
 # --- HR: Holographic Rare (20 cards) ---
@@ -51,16 +58,19 @@ ssr_cards <- make_cards(
 hr_chars <- c(rep(NA_character_, 17), "Scavenger", rep(NA_character_, 2))
 hr_factions <- c(rep(NA_character_, 17), "Decepticon", rep(NA_character_, 2))
 hr_cards <- make_cards(set_code, "HR", 20, character_name = hr_chars, faction = hr_factions,
-                       card_type = "lenticular")
+                       card_type = "lenticular",
+                       data_confidence = "inferred")
 
 # --- SR: Super Rare (20 cards) ---
-sr_cards <- make_cards(set_code, "SR", 20)
+sr_cards <- make_cards(set_code, "SR", 20,
+                       data_confidence = "inferred")
 
 # --- R: Rare / Base (32 cards) ---
 # Confirmed: TF03-R-003 = Wreck-Gar
 r_chars <- c(NA_character_, NA_character_, "Wreck-Gar", rep(NA_character_, 29))
 r_factions <- c(NA_character_, NA_character_, "Autobot", rep(NA_character_, 29))
-r_cards <- make_cards(set_code, "R", 32, character_name = r_chars, faction = r_factions)
+r_cards <- make_cards(set_code, "R", 32, character_name = r_chars, faction = r_factions,
+                       data_confidence = "inferred")
 
 tf03_cards <- dplyr::bind_rows(
   se_cards, bp_cards, lr_cards, ar_cards, ur_cards,
