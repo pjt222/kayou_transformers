@@ -14,7 +14,7 @@
 #' DBI::dbGetQuery(con, "SELECT * FROM cards WHERE set_code = 'TFEU01' LIMIT 5")
 #' }
 kt_connection <- function() {
-  if (is.null(.kt_env$con)) {
+  if (is.null(.kt_env$con) || !DBI::dbIsValid(.kt_env$con)) {
     .kt_env$con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
     .kt_env$tables_registered <- FALSE
   }
