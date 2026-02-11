@@ -34,7 +34,7 @@ sources <- tribble(
   "TF02-TCA-review", "TF02", "website",
   "https://tradingcardarchives.com/2023/11/01/kayou-transformers-cards-series-2/", NA_character_,
   "TF02 box review with card scans", as.Date("2024-12-01"), "secondary",
-  "Confirmed 4 individual cards; structure assumed same as TF01",
+  "125 cards, 10 rarities (adds MR/9, R=28 not 36); 12 characters confirmed from eBay denominators",
 
 # --- TF03: Cybertron Collection Series 3 ---
 
