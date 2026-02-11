@@ -4,53 +4,22 @@
 # Known characters: Optimus Prime, Bumblebee, Windblade, Ravage, Red Alert,
 #                   Bombshell, Thundercracker, Bludgeon, Starscream, Greenlight
 
-library(tibble)
+source("data-raw/00_helpers.R")
 
 set_code <- "TF01"
 
-make_cards <- function(rarity_code, card_count, characters = NA, factions = NA,
-                       card_type = "character") {
-  # Validate vector lengths match card_count (allow scalar NA as "no data")
-  check_len <- function(x, name) {
-    if (!(length(x) == 1L && is.na(x[1L])) && length(x) != card_count) {
-      stop(sprintf("%s-%s: '%s' has length %d, expected %d",
-                   set_code, rarity_code, name, length(x), card_count),
-           call. = FALSE)
-    }
-  }
-  check_len(characters, "characters")
-  check_len(factions, "factions")
-
-  tibble(
-    card_id = paste0(set_code, "-", rarity_code, "-", sprintf("%03d", seq_len(card_count))),
-    set_code = set_code,
-    rarity_code = rarity_code,
-    card_number = sprintf("%03d", seq_len(card_count)),
-    card_name_en = rep(NA_character_, card_count),
-    card_name_zh = rep(NA_character_, card_count),
-    character_name = if (length(characters) == card_count) characters else rep(NA_character_, card_count),
-    faction = if (length(factions) == card_count) factions else rep(NA_character_, card_count),
-    card_type = card_type,
-    is_parallel = FALSE,
-    parallel_of = NA_character_,
-    product_exclusive = NA_character_,
-    print_run = NA_integer_,
-    image_url = NA_character_
-  )
-}
-
 # --- BP: Box-Pull (6 cards) - AR/Augmented Reality phone integration ---
-bp_cards <- make_cards("BP", 6, card_type = "augmented_reality")
+bp_cards <- make_cards(set_code, "BP", 6, card_type = "augmented_reality")
 
 # --- LR: Limited Rare (7 cards) ---
-lr_cards <- make_cards("LR", 7)
+lr_cards <- make_cards(set_code, "LR", 7)
 
 # --- AR: Augmented Reality (8 cards) ---
 # Confirmed: TF01-AR-001 = Optimus Prime
 ar_chars <- c("Optimus Prime", rep(NA_character_, 7))
 ar_factions <- c("Autobot", rep(NA_character_, 7))
-ar_cards <- make_cards("AR", 8, characters = ar_chars, factions = ar_factions,
-                        card_type = "augmented_reality")
+ar_cards <- make_cards(set_code, "AR", 8, character_name = ar_chars, faction = ar_factions,
+                       card_type = "augmented_reality")
 
 # --- UR: Ultra Rare (8 cards) ---
 # Confirmed from 1688 promo images:
@@ -62,35 +31,35 @@ ur_chars <- c("Optimus Prime", "Bumblebee", "Grimlock", "Windblade",
               "Megatron", "Starscream", "Soundwave", NA_character_)
 ur_factions <- c("Autobot", "Autobot", "Autobot", "Autobot",
                  "Decepticon", "Decepticon", "Decepticon", NA_character_)
-ur_cards <- make_cards("UR", 8, characters = ur_chars, factions = ur_factions)
+ur_cards <- make_cards(set_code, "UR", 8, character_name = ur_chars, faction = ur_factions)
 
 # --- SHR: Super Holographic Rare (3 cards) ---
 # Animated lenticular, 4-panel transformation sequence
 # Confirmed from 1688 promo: TF01-SHR-001/003 = Optimus Prime (四帧变形)
 shr_chars <- c("Optimus Prime", rep(NA_character_, 2))
 shr_factions <- c("Autobot", rep(NA_character_, 2))
-shr_cards <- make_cards("SHR", 3, characters = shr_chars, factions = shr_factions,
-                         card_type = "lenticular")
+shr_cards <- make_cards(set_code, "SHR", 3, character_name = shr_chars, faction = shr_factions,
+                        card_type = "lenticular")
 
 # --- SSR: Super Special Rare (16 cards) ---
 # Confirmed: TF01-SSR-008 = Greenlight (from COMC)
 # SSR Optimus Prime features rainbow-inlaid foil on white areas
 ssr_chars <- c(rep(NA_character_, 7), "Greenlight", rep(NA_character_, 8))
 ssr_factions <- c(rep(NA_character_, 7), "Autobot", rep(NA_character_, 8))
-ssr_cards <- make_cards("SSR", 16, characters = ssr_chars, factions = ssr_factions)
+ssr_cards <- make_cards(set_code, "SSR", 16, character_name = ssr_chars, faction = ssr_factions)
 
 # --- HR: Holographic Rare (20 cards) ---
 # Lenticular transformation animation cards
-hr_cards <- make_cards("HR", 20, card_type = "lenticular")
+hr_cards <- make_cards(set_code, "HR", 20, card_type = "lenticular")
 
 # --- SR: Super Rare (20 cards) ---
-sr_cards <- make_cards("SR", 20)
+sr_cards <- make_cards(set_code, "SR", 20)
 
 # --- R: Rare / Base (36 cards) ---
 # Confirmed: TF01-R-001 = Optimus Prime
 r_chars <- c("Optimus Prime", rep(NA_character_, 35))
 r_factions <- c("Autobot", rep(NA_character_, 35))
-r_cards <- make_cards("R", 36, characters = r_chars, factions = r_factions)
+r_cards <- make_cards(set_code, "R", 36, character_name = r_chars, faction = r_factions)
 
 tf01_cards <- dplyr::bind_rows(
   bp_cards, lr_cards, ar_cards, ur_cards, shr_cards,

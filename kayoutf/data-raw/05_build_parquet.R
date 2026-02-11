@@ -74,8 +74,8 @@ cat("\nStep 3b: Validating combined data...\n")
 # Check expected columns
 expected_card_cols <- c("card_id", "set_code", "rarity_code", "card_number",
                         "card_name_en", "card_name_zh", "character_name",
-                        "faction", "card_type", "is_parallel", "parallel_of",
-                        "product_exclusive", "print_run", "image_url")
+                        "faction", "card_type", "is_parallel",
+                        "product_exclusive", "print_run", "notes")
 missing_cols <- setdiff(expected_card_cols, names(all_cards))
 if (length(missing_cols) > 0) {
   stop("Cards missing columns: ", paste(missing_cols, collapse = ", "))

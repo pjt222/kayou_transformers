@@ -2,61 +2,22 @@
 # Source: Booklet scans (booklet_1.pdf = Super Quantum Pack, booklet_2.pdf = Elite Pack)
 # This is the most complete dataset, extracted from official product booklets.
 
-library(tibble)
+source("data-raw/00_helpers.R")
 
 set_code <- "TFEU01"
-
-# Helper to create card entries for a rarity tier
-make_cards <- function(rarity_code, card_count, names_en, names_zh = NA,
-                       characters = NA, factions = NA, card_type = "character",
-                       is_parallel = FALSE, parallel_of = NA,
-                       product_exclusive = NA, print_run = NA) {
-  # Validate vector lengths match card_count (allow scalar NA as "no data")
-  check_len <- function(x, name) {
-    if (!(length(x) == 1L && is.na(x[1L])) && length(x) != card_count) {
-      stop(sprintf("%s-%s: '%s' has length %d, expected %d",
-                   set_code, rarity_code, name, length(x), card_count),
-           call. = FALSE)
-    }
-  }
-  check_len(names_en, "names_en")
-  check_len(names_zh, "names_zh")
-  check_len(characters, "characters")
-  check_len(factions, "factions")
-  check_len(parallel_of, "parallel_of")
-  check_len(product_exclusive, "product_exclusive")
-  check_len(print_run, "print_run")
-
-  tibble(
-    card_id = paste0(set_code, "-", rarity_code, "-", sprintf("%03d", seq_len(card_count))),
-    set_code = set_code,
-    rarity_code = rarity_code,
-    card_number = sprintf("%03d", seq_len(card_count)),
-    card_name_en = if (length(names_en) == card_count) names_en else rep(NA_character_, card_count),
-    card_name_zh = if (length(names_zh) == card_count) names_zh else rep(NA_character_, card_count),
-    character_name = if (length(characters) == card_count) characters else rep(NA_character_, card_count),
-    faction = if (length(factions) == card_count) factions else rep(NA_character_, card_count),
-    card_type = card_type,
-    is_parallel = is_parallel,
-    parallel_of = if (length(parallel_of) == card_count) parallel_of else rep(NA_character_, card_count),
-    product_exclusive = if (length(product_exclusive) == card_count) product_exclusive else rep(NA_character_, card_count),
-    print_run = if (length(print_run) == card_count) print_run else rep(NA_integer_, card_count),
-    image_url = NA_character_
-  )
-}
 
 # --- BP: Box-Pull Exclusive (5 cards) ---
 # Hit Pack exclusive cards from the Super Quantum Pack
 bp_cards <- make_cards(
-  "BP", 5,
-  names_en = c("Optimus Prime BP", "Megatron BP", "Starscream BP",
-               "Bumblebee BP", "Grimlock BP"),
-  names_zh = c("擎天柱 BP", "威震天 BP", "红蜘蛛 BP",
-               "大黄蜂 BP", "钢锁 BP"),
-  characters = c("Optimus Prime", "Megatron", "Starscream",
-                  "Bumblebee", "Grimlock"),
-  factions = c("Autobot", "Decepticon", "Decepticon",
-               "Autobot", "Autobot"),
+  set_code, "BP", 5,
+  card_name_en = c("Optimus Prime BP", "Megatron BP", "Starscream BP",
+                   "Bumblebee BP", "Grimlock BP"),
+  card_name_zh = c("擎天柱 BP", "威震天 BP", "红蜘蛛 BP",
+                   "大黄蜂 BP", "钢锁 BP"),
+  character_name = c("Optimus Prime", "Megatron", "Starscream",
+                     "Bumblebee", "Grimlock"),
+  faction = c("Autobot", "Decepticon", "Decepticon",
+              "Autobot", "Autobot"),
   card_type = "character",
   product_exclusive = rep("TFEU01-super", 5)
 )
@@ -64,19 +25,19 @@ bp_cards <- make_cards(
 # --- XR-DG: Dark Gold XR (9 cards) ---
 # Super Quantum Pack exclusive, limited 9 serial numbered
 xr_dg_cards <- make_cards(
-  "XR-DG", 9,
-  names_en = c("Optimus Prime Dark Gold", "Megatron Dark Gold",
-               "Starscream Dark Gold", "Soundwave Dark Gold",
-               "Grimlock Dark Gold", "Shockwave Dark Gold",
-               "Bumblebee Dark Gold", "Jazz Dark Gold",
-               "Elita One Dark Gold"),
-  names_zh = c("擎天柱 暗金", "威震天 暗金", "红蜘蛛 暗金",
-               "声波 暗金", "钢锁 暗金", "震荡波 暗金",
-               "大黄蜂 暗金", "爵士 暗金", "艾丽塔 暗金"),
-  characters = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
-                  "Grimlock", "Shockwave", "Bumblebee", "Jazz", "Elita One"),
-  factions = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
-               "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot"),
+  set_code, "XR-DG", 9,
+  card_name_en = c("Optimus Prime Dark Gold", "Megatron Dark Gold",
+                   "Starscream Dark Gold", "Soundwave Dark Gold",
+                   "Grimlock Dark Gold", "Shockwave Dark Gold",
+                   "Bumblebee Dark Gold", "Jazz Dark Gold",
+                   "Elita One Dark Gold"),
+  card_name_zh = c("擎天柱 暗金", "威震天 暗金", "红蜘蛛 暗金",
+                   "声波 暗金", "钢锁 暗金", "震荡波 暗金",
+                   "大黄蜂 暗金", "爵士 暗金", "艾丽塔 暗金"),
+  character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
+                     "Grimlock", "Shockwave", "Bumblebee", "Jazz", "Elita One"),
+  faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
+              "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot"),
   is_parallel = TRUE,
   product_exclusive = rep("TFEU01-super", 9),
   print_run = rep(9L, 9)
@@ -85,45 +46,45 @@ xr_dg_cards <- make_cards(
 # --- XR-RD: Red XR (4 cards) ---
 # Limited 4 serial numbered
 xr_rd_cards <- make_cards(
-  "XR-RD", 4,
-  names_en = c("Optimus Prime Red", "Megatron Red",
-               "Starscream Red", "Soundwave Red"),
-  names_zh = c("擎天柱 臻红", "威震天 臻红",
-               "红蜘蛛 臻红", "声波 臻红"),
-  characters = c("Optimus Prime", "Megatron", "Starscream", "Soundwave"),
-  factions = c("Autobot", "Decepticon", "Decepticon", "Decepticon"),
+  set_code, "XR-RD", 4,
+  card_name_en = c("Optimus Prime Red", "Megatron Red",
+                   "Starscream Red", "Soundwave Red"),
+  card_name_zh = c("擎天柱 臻红", "威震天 臻红",
+                   "红蜘蛛 臻红", "声波 臻红"),
+  character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave"),
+  faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon"),
   is_parallel = TRUE,
   print_run = rep(4L, 4)
 )
 
 # --- XR: Standard XR (9 cards) ---
 xr_cards <- make_cards(
-  "XR", 9,
-  names_en = c("Optimus Prime XR", "Megatron XR", "Starscream XR",
-               "Soundwave XR", "Grimlock XR", "Shockwave XR",
-               "Bumblebee XR", "Jazz XR", "Elita One XR"),
-  names_zh = c("擎天柱", "威震天", "红蜘蛛", "声波",
-               "钢锁", "震荡波", "大黄蜂", "爵士", "艾丽塔"),
-  characters = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
-                  "Grimlock", "Shockwave", "Bumblebee", "Jazz", "Elita One"),
-  factions = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
-               "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot")
+  set_code, "XR", 9,
+  card_name_en = c("Optimus Prime XR", "Megatron XR", "Starscream XR",
+                   "Soundwave XR", "Grimlock XR", "Shockwave XR",
+                   "Bumblebee XR", "Jazz XR", "Elita One XR"),
+  card_name_zh = c("擎天柱", "威震天", "红蜘蛛", "声波",
+                   "钢锁", "震荡波", "大黄蜂", "爵士", "艾丽塔"),
+  character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
+                     "Grimlock", "Shockwave", "Bumblebee", "Jazz", "Elita One"),
+  faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
+              "Autobot", "Decepticon", "Autobot", "Autobot", "Autobot")
 )
 
 # --- OR-S: Assembly Star (8 cards, limited 380 copies) ---
 or_s_cards <- make_cards(
-  "OR-S", 8,
-  names_en = c("Optimus Prime Assembly Star", "Megatron Assembly Star",
-               "Starscream Assembly Star", "Soundwave Assembly Star",
-               "Grimlock Assembly Star", "Bumblebee Assembly Star",
-               "Shockwave Assembly Star", "Jazz Assembly Star"),
-  names_zh = c("擎天柱 集结☆", "威震天 集结☆", "红蜘蛛 集结☆",
-               "声波 集结☆", "钢锁 集结☆", "大黄蜂 集结☆",
-               "震荡波 集结☆", "爵士 集结☆"),
-  characters = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
-                  "Grimlock", "Bumblebee", "Shockwave", "Jazz"),
-  factions = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
-               "Autobot", "Autobot", "Decepticon", "Autobot"),
+  set_code, "OR-S", 8,
+  card_name_en = c("Optimus Prime Assembly Star", "Megatron Assembly Star",
+                   "Starscream Assembly Star", "Soundwave Assembly Star",
+                   "Grimlock Assembly Star", "Bumblebee Assembly Star",
+                   "Shockwave Assembly Star", "Jazz Assembly Star"),
+  card_name_zh = c("擎天柱 集结\u2606", "威震天 集结\u2606", "红蜘蛛 集结\u2606",
+                   "声波 集结\u2606", "钢锁 集结\u2606", "大黄蜂 集结\u2606",
+                   "震荡波 集结\u2606", "爵士 集结\u2606"),
+  character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
+                     "Grimlock", "Bumblebee", "Shockwave", "Jazz"),
+  faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
+              "Autobot", "Autobot", "Decepticon", "Autobot"),
   card_type = "scene",
   is_parallel = TRUE,
   print_run = rep(380L, 8)
@@ -132,71 +93,71 @@ or_s_cards <- make_cards(
 # --- OR: Assembly (8 cards) ---
 # Unique card face per pack type
 or_cards <- make_cards(
-  "OR", 8,
-  names_en = c("Optimus Prime Assembly", "Megatron Assembly",
-               "Starscream Assembly", "Soundwave Assembly",
-               "Grimlock Assembly", "Bumblebee Assembly",
-               "Shockwave Assembly", "Jazz Assembly"),
-  names_zh = c("擎天柱 集结", "威震天 集结", "红蜘蛛 集结",
-               "声波 集结", "钢锁 集结", "大黄蜂 集结",
-               "震荡波 集结", "爵士 集结"),
-  characters = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
-                  "Grimlock", "Bumblebee", "Shockwave", "Jazz"),
-  factions = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
-               "Autobot", "Autobot", "Decepticon", "Autobot"),
+  set_code, "OR", 8,
+  card_name_en = c("Optimus Prime Assembly", "Megatron Assembly",
+                   "Starscream Assembly", "Soundwave Assembly",
+                   "Grimlock Assembly", "Bumblebee Assembly",
+                   "Shockwave Assembly", "Jazz Assembly"),
+  card_name_zh = c("擎天柱 集结", "威震天 集结", "红蜘蛛 集结",
+                   "声波 集结", "钢锁 集结", "大黄蜂 集结",
+                   "震荡波 集结", "爵士 集结"),
+  character_name = c("Optimus Prime", "Megatron", "Starscream", "Soundwave",
+                     "Grimlock", "Bumblebee", "Shockwave", "Jazz"),
+  faction = c("Autobot", "Decepticon", "Decepticon", "Decepticon",
+              "Autobot", "Autobot", "Decepticon", "Autobot"),
   card_type = "scene"
 )
 
 # --- WR: War (6 cards) ---
 # Unique card face per pack type
 wr_cards <- make_cards(
-  "WR", 6,
-  names_en = c("Autobot Assault", "Decepticon Siege",
-               "Cybertron Battle", "Energon Clash",
-               "Prime vs Megatron", "Dinobot Rampage"),
-  names_zh = c("汽车人突击", "霸天虎围攻",
-               "塞伯坦之战", "能量冲突",
-               "擎天柱对威震天", "机器恐龙暴走"),
-  characters = c("Optimus Prime", "Megatron", "Optimus Prime",
-                  "Soundwave", "Optimus Prime", "Grimlock"),
-  factions = c("Autobot", "Decepticon", "Autobot",
-               "Decepticon", "Autobot", "Autobot"),
+  set_code, "WR", 6,
+  card_name_en = c("Autobot Assault", "Decepticon Siege",
+                   "Cybertron Battle", "Energon Clash",
+                   "Prime vs Megatron", "Dinobot Rampage"),
+  card_name_zh = c("汽车人突击", "霸天虎围攻",
+                   "塞伯坦之战", "能量冲突",
+                   "擎天柱对威震天", "机器恐龙暴走"),
+  character_name = c("Optimus Prime", "Megatron", "Optimus Prime",
+                     "Soundwave", "Optimus Prime", "Grimlock"),
+  faction = c("Autobot", "Decepticon", "Autobot",
+              "Decepticon", "Autobot", "Autobot"),
   card_type = "scene"
 )
 
 # --- LR-S: Heroes Star (12 cards) ---
-# Confirmed from 1688 promo: LR☆-001 = Optimus Prime (399编),
-#   LR☆-002 = Megatron (599编), Arcee (position 011) = 499编
+# Confirmed from 1688 promo: LR-S-001 = Optimus Prime (399),
+#   LR-S-002 = Megatron (599), Arcee (position 011) = 499
 lr_s_print_runs <- c(399L, 599L, rep(NA_integer_, 8), 499L, NA_integer_)
 lr_s_cards <- make_cards(
-  "LR-S", 12,
-  names_en = paste0(c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
-                       "Soundwave", "Grimlock", "Jazz", "Ironhide",
-                       "Ratchet", "Shockwave", "Arcee", "Elita One"),
-                    " Heroes Star"),
-  characters = c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
-                  "Soundwave", "Grimlock", "Jazz", "Ironhide",
-                  "Ratchet", "Shockwave", "Arcee", "Elita One"),
-  factions = c("Autobot", "Decepticon", "Autobot", "Decepticon",
-               "Decepticon", "Autobot", "Autobot", "Autobot",
-               "Autobot", "Decepticon", "Autobot", "Autobot"),
+  set_code, "LR-S", 12,
+  card_name_en = paste0(c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
+                           "Soundwave", "Grimlock", "Jazz", "Ironhide",
+                           "Ratchet", "Shockwave", "Arcee", "Elita One"),
+                        " Heroes Star"),
+  character_name = c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
+                     "Soundwave", "Grimlock", "Jazz", "Ironhide",
+                     "Ratchet", "Shockwave", "Arcee", "Elita One"),
+  faction = c("Autobot", "Decepticon", "Autobot", "Decepticon",
+              "Decepticon", "Autobot", "Autobot", "Autobot",
+              "Autobot", "Decepticon", "Autobot", "Autobot"),
   is_parallel = TRUE,
   print_run = lr_s_print_runs
 )
 
 # --- LR: Heroes (12 cards) ---
 lr_cards <- make_cards(
-  "LR", 12,
-  names_en = paste0(c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
-                       "Soundwave", "Grimlock", "Jazz", "Ironhide",
-                       "Ratchet", "Shockwave", "Arcee", "Elita One"),
-                    " Heroes"),
-  characters = c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
-                  "Soundwave", "Grimlock", "Jazz", "Ironhide",
-                  "Ratchet", "Shockwave", "Arcee", "Elita One"),
-  factions = c("Autobot", "Decepticon", "Autobot", "Decepticon",
-               "Decepticon", "Autobot", "Autobot", "Autobot",
-               "Autobot", "Decepticon", "Autobot", "Autobot")
+  set_code, "LR", 12,
+  card_name_en = paste0(c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
+                           "Soundwave", "Grimlock", "Jazz", "Ironhide",
+                           "Ratchet", "Shockwave", "Arcee", "Elita One"),
+                        " Heroes"),
+  character_name = c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
+                     "Soundwave", "Grimlock", "Jazz", "Ironhide",
+                     "Ratchet", "Shockwave", "Arcee", "Elita One"),
+  faction = c("Autobot", "Decepticon", "Autobot", "Decepticon",
+              "Decepticon", "Autobot", "Autobot", "Autobot",
+              "Autobot", "Decepticon", "Autobot", "Autobot")
 )
 
 # --- UR-S: Cover Variant Star (20 cards) ---
@@ -214,20 +175,20 @@ ur_s_factions <- c(
   "Autobot", "Decepticon", "Decepticon", "Decepticon", "Autobot"
 )
 ur_s_cards <- make_cards(
-  "UR-S", 20,
-  names_en = paste0(ur_s_characters, " Cover Variant Star"),
-  characters = ur_s_characters,
-  factions = ur_s_factions,
+  set_code, "UR-S", 20,
+  card_name_en = paste0(ur_s_characters, " Cover Variant Star"),
+  character_name = ur_s_characters,
+  faction = ur_s_factions,
   card_type = "cover_variant",
   is_parallel = TRUE
 )
 
 # --- UR: Cover Variant (20 cards) ---
 ur_cards <- make_cards(
-  "UR", 20,
-  names_en = paste0(ur_s_characters, " Cover Variant"),
-  characters = ur_s_characters,
-  factions = ur_s_factions,
+  set_code, "UR", 20,
+  card_name_en = paste0(ur_s_characters, " Cover Variant"),
+  character_name = ur_s_characters,
+  faction = ur_s_factions,
   card_type = "cover_variant"
 )
 
@@ -255,10 +216,10 @@ sr_factions <- c(
   "Autobot", "Autobot", "Autobot", "Decepticon"
 )
 sr_cards <- make_cards(
-  "SR", 36,
-  names_en = paste0("Montage ", sprintf("%03d", 1:36)),
-  characters = sr_characters,
-  factions = sr_factions,
+  set_code, "SR", 36,
+  card_name_en = paste0("Montage ", sprintf("%03d", 1:36)),
+  character_name = sr_characters,
+  faction = sr_factions,
   card_type = "scene"
 )
 
@@ -276,31 +237,40 @@ ssr_factions <- c(
   "Autobot", "Decepticon", "Decepticon", "Autobot", "Autobot"
 )
 ssr_cards <- make_cards(
-  "SSR", 20,
-  names_en = paste0(ssr_characters, " Comic Breakout"),
-  characters = ssr_characters,
-  factions = ssr_factions,
+  set_code, "SSR", 20,
+  card_name_en = paste0(ssr_characters, " Comic Breakout"),
+  character_name = ssr_characters,
+  faction = ssr_factions,
   card_type = "comic_panel"
 )
 
 # --- HR: 3D Faction (3 cards, die-cut) ---
+# Fix #2: These are faction emblem cards, not character cards.
+# character_name is NA; faction conveys the emblem subject.
 hr_cards <- make_cards(
-  "HR", 3,
-  names_en = c("Autobot Emblem", "Decepticon Emblem", "Dinobot Emblem"),
-  names_zh = c("汽车人徽章", "霸天虎徽章", "机器恐龙徽章"),
-  characters = c("Autobot", "Decepticon", "Grimlock"),
-  factions = c("Autobot", "Decepticon", "Autobot"),
-  card_type = "die_cut"
+  set_code, "HR", 3,
+  card_name_en = c("Autobot Emblem", "Decepticon Emblem", "Dinobot Emblem"),
+  card_name_zh = c("汽车人徽章", "霸天虎徽章", "机器恐龙徽章"),
+  faction = c("Autobot", "Decepticon", "Autobot"),
+  card_type = "die_cut",
+  notes = c("Faction emblem die-cut card", "Faction emblem die-cut card",
+            "Dinobot sub-faction emblem die-cut card")
 )
 
 # --- AR: Portrait (3 cards) ---
+# Fix #1: Card numbers on physical cards are non-sequential:
+#   AR-001 = Optimus Prime, AR-009 = Megatron, AR-0?? = Bumblebee
+# We store sequential IDs (001/002/003) but note the discrepancy.
 ar_cards <- make_cards(
-  "AR", 3,
-  names_en = c("Optimus Prime Portrait", "Megatron Portrait", "Bumblebee Portrait"),
-  names_zh = c("擎天柱 肖像", "威震天 肖像", "大黄蜂 肖像"),
-  characters = c("Optimus Prime", "Megatron", "Bumblebee"),
-  factions = c("Autobot", "Decepticon", "Autobot"),
-  card_type = "portrait"
+  set_code, "AR", 3,
+  card_name_en = c("Optimus Prime Portrait", "Megatron Portrait", "Bumblebee Portrait"),
+  card_name_zh = c("擎天柱 肖像", "威震天 肖像", "大黄蜂 肖像"),
+  character_name = c("Optimus Prime", "Megatron", "Bumblebee"),
+  faction = c("Autobot", "Decepticon", "Autobot"),
+  card_type = "portrait",
+  notes = c("Physical card printed as AR-001",
+            "Physical card printed as AR-009 (non-sequential)",
+            "Physical card number unconfirmed")
 )
 
 # --- RD: Redemption cards ---
@@ -308,8 +278,8 @@ ar_cards <- make_cards(
 # Total cards needed to reach 254: 254 - 175 = 79
 # This includes puzzle tile pieces and redemption prizes
 rd_cards <- make_cards(
-  "RD", 79,
-  names_en = c(
+  set_code, "RD", 79,
+  card_name_en = c(
     paste0("Puzzle Tile ", sprintf("%02d", 1:72)),
     paste0("Binder Redemption ", sprintf("%02d", 1:4)),
     paste0("Puzzle Set Redemption ", sprintf("%02d", 1:3))
