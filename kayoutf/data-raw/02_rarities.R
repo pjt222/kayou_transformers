@@ -90,15 +90,15 @@ tfh01_rarities$set_code <- "TFH01"
 # --- TFO01 rarities (from Seibertron forum detailed breakdown) ---
 tfo01_rarities <- tribble(
   ~rarity_code, ~rarity_name_en, ~rarity_name_zh, ~card_count, ~sort_order, ~notes,
-  "SE",    "Signed Edition",       NA_character_,  0L, 1L, "Redemption QR codes, limited 99 copies, voice actor signatures",
-  "XR",    "Extreme Rare",         NA_character_,  4L, 2L, "Metal art cards; OP/Megs limited 399, others limited 699",
-  "SHR",   "Super Holographic Rare", NA_character_, 6L, 3L, "Lenticular transforming cards, much rarer than HR",
-  "UR-S",  "Ultra Rare Star",      NA_character_, 10L, 4L, "Fancier bot and alt mode presentations",
-  "UR",    "Ultra Rare",           NA_character_, 17L, 5L, "Confirmed /017 denominator",
-  "HR",    "Holographic Rare",     NA_character_, 19L, 6L, "Lenticular transforming cards",
-  "SSR",   "Super Special Rare",   NA_character_, 35L, 7L, "Dynamic bot mode pose cards, confirmed /035",
-  "SR",    "Super Rare",           NA_character_, 45L, 8L, "Static bot mode pose cards, confirmed /045",
-  "TP",    "The Primes",           NA_character_, 13L, 9L, "All 13 Primes with big-screen designs"
+  # SE (Signed Edition) removed: QR redemption codes with 0 physical cards, not a card rarity
+  "XR",    "Extreme Rare",         NA_character_,  4L, 1L, "Metal art cards; OP/Megs limited 399, others limited 699",
+  "SHR",   "Super Holographic Rare", NA_character_, 6L, 2L, "Lenticular transforming cards, much rarer than HR",
+  "UR-S",  "Ultra Rare Star",      NA_character_, 10L, 3L, "Fancier bot and alt mode presentations",
+  "UR",    "Ultra Rare",           NA_character_, 17L, 4L, "Confirmed /017 denominator",
+  "HR",    "Holographic Rare",     NA_character_, 19L, 5L, "Lenticular transforming cards",
+  "SSR",   "Super Special Rare",   NA_character_, 35L, 6L, "Dynamic bot mode pose cards, confirmed /035",
+  "SR",    "Super Rare",           NA_character_, 45L, 7L, "Static bot mode pose cards, confirmed /045",
+  "TP",    "The Primes",           NA_character_, 13L, 8L, "All 13 Primes with big-screen designs"
 )
 tfo01_rarities$set_code <- "TFO01"
 
