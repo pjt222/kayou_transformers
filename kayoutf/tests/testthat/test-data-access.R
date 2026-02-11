@@ -42,6 +42,30 @@ test_that("kt_cards filters by character", {
                   na.rm = TRUE))
 })
 
+test_that("kt_cards supports vector set filter", {
+  result <- kt_cards(set = c("TF01", "TF02"))
+  expect_true(all(result$set_code %in% c("TF01", "TF02")))
+  expect_equal(nrow(result), 124 + 124)
+})
+
+test_that("kt_cards supports vector rarity filter", {
+  result <- kt_cards(set = "TFEU01", rarity = c("BP", "AR"))
+  expect_true(all(result$rarity_code %in% c("BP", "AR")))
+  expect_equal(nrow(result), 5 + 3)
+})
+
+test_that("kt_cards supports vector faction filter", {
+  result <- kt_cards(set = "TFEU01", rarity = "BP",
+                     faction = c("Autobot", "Decepticon"))
+  expect_equal(nrow(result), 5)
+})
+
+test_that("kt_rarities supports vector set filter", {
+  result <- kt_rarities(set = c("TF01", "TF02"))
+  expect_true(all(result$set_code %in% c("TF01", "TF02")))
+  expect_equal(nrow(result), 9 + 9)
+})
+
 test_that("kt_rarities returns tibble", {
   result <- kt_rarities()
   expect_s3_class(result, "tbl_df")

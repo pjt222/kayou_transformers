@@ -3,13 +3,14 @@
 #' Returns a tibble of cards, optionally filtered by set, rarity, character,
 #' or faction.
 #'
-#' @param set Character. Filter by set code (e.g. "TFEU01"). Default `NULL`
-#'   returns all sets.
-#' @param rarity Character. Filter by rarity code (e.g. "SSR"). Default `NULL`.
-#' @param character Character. Filter by character name (partial match).
+#' @param set Character vector. Filter by set code(s) (e.g. "TFEU01" or
+#'   `c("TF01", "TF02")`). Default `NULL` returns all sets.
+#' @param rarity Character vector. Filter by rarity code(s) (e.g. "SSR" or
+#'   `c("SSR", "UR")`). Default `NULL`.
+#' @param character Character scalar. Filter by character name (partial match).
 #'   Default `NULL`.
-#' @param faction Character. Filter by faction (e.g. "Autobot", "Decepticon").
-#'   Default `NULL`.
+#' @param faction Character vector. Filter by faction(s) (e.g. "Autobot" or
+#'   `c("Autobot", "Decepticon")`). Default `NULL`.
 #'
 #' @return A [tibble::tibble].
 #' @export
@@ -37,20 +38,23 @@ kt_cards <- function(set = NULL, rarity = NULL, character = NULL,
   params <- list()
 
   if (!is.null(set)) {
-    query <- paste0(query, " AND set_code = ?")
-    params <- c(params, list(set))
+    placeholders <- paste(rep("?", length(set)), collapse = ", ")
+    query <- paste0(query, " AND set_code IN (", placeholders, ")")
+    params <- c(params, as.list(set))
   }
   if (!is.null(rarity)) {
-    query <- paste0(query, " AND rarity_code = ?")
-    params <- c(params, list(rarity))
+    placeholders <- paste(rep("?", length(rarity)), collapse = ", ")
+    query <- paste0(query, " AND rarity_code IN (", placeholders, ")")
+    params <- c(params, as.list(rarity))
   }
   if (!is.null(character)) {
     query <- paste0(query, " AND character_name ILIKE ?")
-    params <- c(params, list(paste0("%", character, "%")))
+    params <- c(params, list(paste0("%", character[1L], "%")))
   }
   if (!is.null(faction)) {
-    query <- paste0(query, " AND faction = ?")
-    params <- c(params, list(faction))
+    placeholders <- paste(rep("?", length(faction)), collapse = ", ")
+    query <- paste0(query, " AND faction IN (", placeholders, ")")
+    params <- c(params, as.list(faction))
   }
 
   query <- paste0(query, " ORDER BY set_code, rarity_code, card_number")
@@ -97,10 +101,12 @@ kt_rarities <- function(set = NULL) {
       "SELECT * FROM rarities ORDER BY set_code, sort_order"
     )
   } else {
+    placeholders <- paste(rep("?", length(set)), collapse = ", ")
     result <- DBI::dbGetQuery(
       con,
-      "SELECT * FROM rarities WHERE set_code = ? ORDER BY sort_order",
-      params = list(set)
+      paste0("SELECT * FROM rarities WHERE set_code IN (", placeholders,
+             ") ORDER BY set_code, sort_order"),
+      params = as.list(set)
     )
   }
 
