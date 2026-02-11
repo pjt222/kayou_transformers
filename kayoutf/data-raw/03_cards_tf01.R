@@ -53,14 +53,24 @@ ar_cards <- make_cards("AR", 8, characters = ar_chars, factions = ar_factions,
                         card_type = "augmented_reality")
 
 # --- UR: Ultra Rare (8 cards) ---
-# Confirmed: TF01-UR-002 = Bumblebee
-ur_chars <- c(NA_character_, "Bumblebee", rep(NA_character_, 6))
-ur_factions <- c(NA_character_, "Autobot", rep(NA_character_, 6))
+# Confirmed from 1688 promo images:
+#   TF01-UR-004/008 = Windblade, TF01-UR-005/008 = Megatron,
+#   TF01-UR-006/008 = Starscream, TF01-UR-007/008 = Soundwave
+# Confirmed from card grid position: UR-001 = Optimus Prime, UR-003 = Grimlock
+# Pre-existing: TF01-UR-002 = Bumblebee
+ur_chars <- c("Optimus Prime", "Bumblebee", "Grimlock", "Windblade",
+              "Megatron", "Starscream", "Soundwave", NA_character_)
+ur_factions <- c("Autobot", "Autobot", "Autobot", "Autobot",
+                 "Decepticon", "Decepticon", "Decepticon", NA_character_)
 ur_cards <- make_cards("UR", 8, characters = ur_chars, factions = ur_factions)
 
 # --- SHR: Super Holographic Rare (3 cards) ---
-# Animated lenticular, more detailed than HR
-shr_cards <- make_cards("SHR", 3, card_type = "lenticular")
+# Animated lenticular, 4-panel transformation sequence
+# Confirmed from 1688 promo: TF01-SHR-001/003 = Optimus Prime (四帧变形)
+shr_chars <- c("Optimus Prime", rep(NA_character_, 2))
+shr_factions <- c("Autobot", rep(NA_character_, 2))
+shr_cards <- make_cards("SHR", 3, characters = shr_chars, factions = shr_factions,
+                         card_type = "lenticular")
 
 # --- SSR: Super Special Rare (16 cards) ---
 # Confirmed: TF01-SSR-008 = Greenlight (from COMC)

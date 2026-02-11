@@ -1,6 +1,7 @@
 # Card images and booklet scans (keep local only, copyright precaution)
 */cards/
 */booklets/*.pdf
+manual_downloads/
 
 # R build artifacts
 kayoutf/data-raw/sources/*.rds

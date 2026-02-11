@@ -165,6 +165,9 @@ wr_cards <- make_cards(
 )
 
 # --- LR-S: Heroes Star (12 cards) ---
+# Confirmed from 1688 promo: LR☆-001 = Optimus Prime (399编),
+#   LR☆-002 = Megatron (599编), Arcee (position 011) = 499编
+lr_s_print_runs <- c(399L, 599L, rep(NA_integer_, 8), 499L, NA_integer_)
 lr_s_cards <- make_cards(
   "LR-S", 12,
   names_en = paste0(c("Optimus Prime", "Megatron", "Bumblebee", "Starscream",
@@ -177,7 +180,8 @@ lr_s_cards <- make_cards(
   factions = c("Autobot", "Decepticon", "Autobot", "Decepticon",
                "Decepticon", "Autobot", "Autobot", "Autobot",
                "Autobot", "Decepticon", "Autobot", "Autobot"),
-  is_parallel = TRUE
+  is_parallel = TRUE,
+  print_run = lr_s_print_runs
 )
 
 # --- LR: Heroes (12 cards) ---

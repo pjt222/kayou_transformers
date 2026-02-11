@@ -10,7 +10,7 @@ find_repo_root()
 Character path to repo root, or \code{NULL}.
 }
 \description{
-Walks up from the current working directory looking for \code{CLAUDE.md} as a
-marker file. Returns \code{NULL} if not found within 10 levels.
+Walks up from the current working directory looking for a \code{.git} directory
+as a marker. Returns \code{NULL} if not found within 10 levels.
 }
 \keyword{internal}

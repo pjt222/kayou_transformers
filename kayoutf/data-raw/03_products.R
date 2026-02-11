@@ -12,7 +12,7 @@ products <- tribble(
   10L, 10L, 254L, NA_character_,
 
   "TFEU01-elite", "TFEU01", "Elite Pack", "精英包",
-  15L, 10L, 239L, NA_character_,
+  5L, 10L, 239L, NA_character_,
 
   # TF01 - Confirmed from Trading Card Archives (purple box, TF-DC-001)
   "TF01-standard", "TF01", "Standard Box", "领袖版",
