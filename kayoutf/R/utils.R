@@ -58,12 +58,17 @@ find_repo_root <- function() {
 #' portable relative image paths from `current_directory` + `filename`.
 #'
 #' @param repo_root Character path to the repository root.
-#' @return A data.frame with classification data and an `image_relative` column,
-#'   or `NULL` if the CSV does not exist.
+#' @return A data.frame with classification data and an `image_relative` column.
+#'   Returns an empty data.frame if the CSV does not exist or is malformed.
 #' @keywords internal
 load_classification_data <- function(repo_root) {
   csv_path <- file.path(repo_root, "scripts", "classification_results.csv")
-  if (!file.exists(csv_path)) return(NULL)
+  if (!file.exists(csv_path)) {
+    return(data.frame(
+      filename = character(), current_directory = character(),
+      image_relative = character(), stringsAsFactors = FALSE
+    ))
+  }
 
   classification_data <- utils::read.csv(csv_path, stringsAsFactors = FALSE)
 
@@ -72,9 +77,12 @@ load_classification_data <- function(repo_root) {
   missing_cols <- setdiff(required_cols, names(classification_data))
   if (length(missing_cols) > 0) {
     warning("classification_results.csv missing columns: ",
-            paste(missing_cols, collapse = ", "), ". Returning NULL.",
+            paste(missing_cols, collapse = ", "), ". Returning empty data.frame.",
             call. = FALSE)
-    return(NULL)
+    return(data.frame(
+      filename = character(), current_directory = character(),
+      image_relative = character(), stringsAsFactors = FALSE
+    ))
   }
 
   # Build portable relative path: {current_directory}/cards/{filename}
@@ -195,12 +203,18 @@ scan_image_directories <- function(repo_root) {
 #' `source = "classified"`.
 #'
 #' @param repo_root Character path to the repository root.
-#' @return A data.frame with all images and an `image_relative` column,
-#'   or `NULL` if no images are found.
+#' @return A data.frame with all images and an `image_relative` column.
+#'   Returns an empty data.frame if no images are found.
 #' @keywords internal
 build_gallery_data <- function(repo_root) {
   scanned <- scan_image_directories(repo_root)
-  if (nrow(scanned) == 0) return(NULL)
+  if (nrow(scanned) == 0) {
+    return(data.frame(
+      filename = character(), directory = character(),
+      image_relative = character(), source = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
 
   # Build image_relative for all scanned images
   scanned$image_relative <- file.path(scanned$directory, "cards",
@@ -208,7 +222,7 @@ build_gallery_data <- function(repo_root) {
 
   classification <- load_classification_data(repo_root)
 
-  if (!is.null(classification)) {
+  if (nrow(classification) > 0) {
     # Match on filename + directory (current_directory in classification)
     scanned$match_key <- paste0(scanned$filename, "|", scanned$directory)
     classification$match_key <- paste0(classification$filename, "|",

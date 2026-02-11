@@ -43,13 +43,14 @@ test_that("find_repo_root returns a path or NULL", {
 
 # --- load_classification_data ---
 
-test_that("load_classification_data returns NULL for missing CSV", {
+test_that("load_classification_data returns empty data.frame for missing CSV", {
   temp_dir <- tempdir()
   result <- load_classification_data(temp_dir)
-  expect_null(result)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
 })
 
-test_that("load_classification_data returns NULL with warning for invalid CSV", {
+test_that("load_classification_data returns empty data.frame with warning for invalid CSV", {
   temp_dir <- tempfile()
   dir.create(file.path(temp_dir, "scripts"), recursive = TRUE)
   csv_path <- file.path(temp_dir, "scripts", "classification_results.csv")
@@ -61,7 +62,8 @@ test_that("load_classification_data returns NULL with warning for invalid CSV", 
     result <- load_classification_data(temp_dir),
     "missing columns"
   )
-  expect_null(result)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
   unlink(temp_dir, recursive = TRUE)
 })
 

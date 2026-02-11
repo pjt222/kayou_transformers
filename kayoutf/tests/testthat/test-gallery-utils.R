@@ -60,11 +60,12 @@ test_that("scan_image_directories returns empty when no cards dirs exist", {
 
 # --- build_gallery_data ---
 
-test_that("build_gallery_data returns NULL when no images found", {
+test_that("build_gallery_data returns empty data.frame when no images found", {
   temp_dir <- tempfile()
   dir.create(temp_dir)
   result <- build_gallery_data(temp_dir)
-  expect_null(result)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
   unlink(temp_dir, recursive = TRUE)
 })
 

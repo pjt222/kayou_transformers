@@ -18,7 +18,7 @@ faction_choices <- sort(unique(all_characters$faction[!is.na(all_characters$fact
 repo_root <- getOption("kayoutf.repo_root")
 if (is.null(repo_root)) repo_root <- find_repo_root()
 
-gallery_data <- NULL
+gallery_data <- data.frame()
 gallery_available <- FALSE
 
 if (!is.null(repo_root)) {
@@ -26,15 +26,15 @@ if (!is.null(repo_root)) {
 }
 
 # Fallback: if provided path didn't work (e.g. WSL vs Windows), try auto-detect
-if (is.null(gallery_data)) {
+if (nrow(gallery_data) == 0) {
   auto_root <- find_repo_root()
   if (!is.null(auto_root) && !identical(auto_root, repo_root)) {
     gallery_data <- build_gallery_data(auto_root)
-    if (!is.null(gallery_data)) repo_root <- auto_root
+    if (nrow(gallery_data) > 0) repo_root <- auto_root
   }
 }
 
-if (!is.null(gallery_data)) {
+if (nrow(gallery_data) > 0) {
   gallery_available <- TRUE
   gallery_dirs <- unique(gallery_data$directory)
   for (dir_name in gallery_dirs) {
@@ -428,6 +428,9 @@ ui <- page_navbar(
 # -- Server -----------------------------------------------------------------------
 server <- function(input, output, session) {
 
+  # Debounced text inputs (300ms delay to avoid filtering on every keystroke)
+  card_character_d <- debounce(reactive(input$card_character), 300)
+  gallery_character_d <- debounce(reactive(input$gallery_character), 300)
 
   # -- Cards tab: cascading rarity filter ----------------------------------------
   observeEvent(input$card_set, {
@@ -465,10 +468,10 @@ server <- function(input, output, session) {
     if (input$card_faction != "") {
       cards <- cards[!is.na(cards$faction) & cards$faction == input$card_faction, ]
     }
-    if (nzchar(input$card_character)) {
+    if (nzchar(card_character_d())) {
       cards <- cards[
         !is.na(cards$character_name) &
-          grepl(input$card_character, cards$character_name, ignore.case = TRUE),
+          grepl(card_character_d(), cards$character_name, ignore.case = TRUE),
       ]
     }
 
@@ -620,10 +623,10 @@ server <- function(input, output, session) {
         data <- data[!is.na(data$rarity_code) &
                        data$rarity_code == input$gallery_rarity, ]
       }
-      if (nzchar(input$gallery_character)) {
+      if (nzchar(gallery_character_d())) {
         data <- data[
           !is.na(data$character_name) &
-            grepl(input$gallery_character, data$character_name,
+            grepl(gallery_character_d(), data$character_name,
                   ignore.case = TRUE),
         ]
       }
@@ -675,7 +678,7 @@ server <- function(input, output, session) {
     # Reset page on filter change
     observeEvent(list(
       input$gallery_set, input$gallery_source, input$gallery_type,
-      input$gallery_rarity, input$gallery_character,
+      input$gallery_rarity, gallery_character_d(),
       input$gallery_confidence, input$gallery_review,
       input$gallery_tags, input$gallery_page_size
     ), {
