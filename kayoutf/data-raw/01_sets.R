@@ -10,7 +10,7 @@ sets <- tribble(
   "Cybertron Leader Edition", 2022L, "G1", 124L,
 
   "TF02", "Cybertron Collection Series 2", "塞伯坦典藏卡领袖版 第2弹",
-  "Cybertron Leader Edition", 2023L, "G1", 124L,
+  "Cybertron Leader Edition", 2023L, "G1", 125L,
 
   "TF03", "Cybertron Collection Series 3", "塞伯坦典藏卡领袖版 第3弹",
   "Cybertron Leader Edition", 2023L, "G1", 124L,

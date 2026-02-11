@@ -45,7 +45,7 @@ test_that("kt_cards filters by character", {
 test_that("kt_cards supports vector set filter", {
   result <- kt_cards(set = c("TF01", "TF02"))
   expect_true(all(result$set_code %in% c("TF01", "TF02")))
-  expect_equal(nrow(result), 124 + 124)
+  expect_equal(nrow(result), 124 + 125)
 })
 
 test_that("kt_cards supports vector rarity filter", {
@@ -63,7 +63,7 @@ test_that("kt_cards supports vector faction filter", {
 test_that("kt_rarities supports vector set filter", {
   result <- kt_rarities(set = c("TF01", "TF02"))
   expect_true(all(result$set_code %in% c("TF01", "TF02")))
-  expect_equal(nrow(result), 9 + 9)
+  expect_equal(nrow(result), 9 + 10)
 })
 
 test_that("kt_rarities returns tibble", {

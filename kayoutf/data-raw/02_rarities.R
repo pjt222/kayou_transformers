@@ -41,18 +41,20 @@ tf01_rarities <- tribble(
 )
 tf01_rarities$set_code <- "TF01"
 
-# --- TF02 rarities (assumed same structure as TF01) ---
+# --- TF02 rarities (confirmed from eBay denominators + TF01 pattern) ---
+# Key differences from TF01: R=28 (not 36), new MR rarity (9 cards)
 tf02_rarities <- tribble(
   ~rarity_code, ~rarity_name_en, ~rarity_name_zh, ~card_count, ~sort_order, ~notes,
-  "BP",   "Box-Pull",             NA_character_,  6L, 1L, NA_character_,
-  "LR",   "Limited Rare",         NA_character_,  7L, 2L, NA_character_,
-  "AR",   "Augmented Reality",    "增强现实卡",   8L, 3L, "Phone-scannable AR cards; note: TFEU01 reuses AR code for Portrait (肖像卡)",
-  "UR",   "Ultra Rare",           NA_character_,  8L, 4L, NA_character_,
-  "SHR",  "Super Holographic Rare", NA_character_, 3L, 5L, NA_character_,
-  "SSR",  "Super Special Rare",   NA_character_, 16L, 6L, NA_character_,
-  "HR",   "Holographic Rare",     NA_character_, 20L, 7L, "Lenticular transformation animation",
-  "SR",   "Super Rare",           NA_character_, 20L, 8L, NA_character_,
-  "R",    "Rare",                 NA_character_, 36L, 9L, "Base cards"
+  "BP",   "Box-Pull",             NA_character_,  6L, 1L, "Assumed from TF01 pattern (no TF02-BP listings found)",
+  "LR",   "Limited Rare",         NA_character_,  7L, 2L, "Assumed from TF01 pattern",
+  "AR",   "Augmented Reality",    "增强现实卡",   8L, 3L, "Assumed from TF01 pattern",
+  "UR",   "Ultra Rare",           NA_character_,  8L, 4L, "Assumed from TF01 pattern",
+  "MR",   "Metal Rare",           NA_character_,  9L, 5L, "Confirmed /009 denominator; unique to TF02, not in TF01/TF03",
+  "SHR",  "Super Holographic Rare", NA_character_, 3L, 6L, "Assumed from TF01 pattern",
+  "SSR",  "Super Special Rare",   NA_character_, 16L, 7L, "Confirmed /016 denominator; Aerialbot combiner theme (SSR-001-005)",
+  "HR",   "Holographic Rare",     NA_character_, 20L, 8L, "Confirmed /020 denominator",
+  "SR",   "Super Rare",           NA_character_, 20L, 9L, "Confirmed /020 denominator",
+  "R",    "Rare",                 NA_character_, 28L, 10L, "Confirmed /028 denominator (differs from TF01's 36)"
 )
 tf02_rarities$set_code <- "TF02"
 
